@@ -1,16 +1,19 @@
 #!/bin/bash
 
+DOMAINNAME=whalecoiner.com
+
+
 # https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 
 sudo apt update
 sudo apt install nginx
 sudo ufw allow 'Nginx Full'
 
-sudo mkdir -p /var/www/whalecoiner.com/html
-sudo chown -R $USER:$USER /var/www/whalecoiner.com/html
-sudo chmod -R 755 /var/www/whalecoiner.com
+sudo mkdir -p /var/www/$DOMAINNAME/html
+sudo chown -R $USER:$USER /var/www/$DOMAINNAME/html
+sudo chmod -R 755 /var/www/$DOMAINNAME
 
-sudo tee -a /etc/nginx/sites-available/whalecoiner.com > /dev/null <<EOT
+sudo tee -a /etc/nginx/sites-available/$DOMAINNAME > /dev/null <<EOT
 server {
         listen 80;
         listen [::]:80;
@@ -18,7 +21,7 @@ server {
         root /var/www/whalecoiner.com/html;
         index index.html index.htm index.nginx-debian.html;
 
-        server_name whalecoiner.com www.whalecoiner.com;
+        server_name $DOMAINNAME www.$DOMAINNAME;
 
         location / {
           proxy_pass http://localhost:3000;
@@ -31,7 +34,7 @@ server {
 }
 EOT
 
-sudo ln -s /etc/nginx/sites-available/whalecoiner.com /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/$DOMAINNAME /etc/nginx/sites-enabled/
 
 # Remove the '#' in the following string:
 # '# server_names_hash_bucket_size 64;'
@@ -49,7 +52,7 @@ sudo systemctl restart nginx
 sudo apt install certbot python3-certbot-nginx
 
 # TODO: need to choose '2' by default (redirect all requests to https)
-sudo certbot --nginx -d whalecoiner.com -d www.whalecoiner.com
+sudo certbot --nginx -d $DOMAINNAME -d www.$DOMAINNAME
 
 # Renew certs automatically
 sudo systemctl status certbot.timer
@@ -71,6 +74,6 @@ sudo npm install pm2@latest -g
 
 pm2 startup systemd
 
-sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u MYUSERNAME --hp /home/MYUSERNAME
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $USERNAME --hp /home/$USERNAME
 
 pm2 save
