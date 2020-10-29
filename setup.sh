@@ -4,7 +4,7 @@
 
 sudo apt update
 sudo apt install nginx
-sudo ufw allow 'Nginx HTTP'
+sudo ufw allow 'Nginx Full'
 
 sudo mkdir -p /var/www/whalecoiner.com/html
 sudo chown -R $USER:$USER /var/www/whalecoiner.com/html
@@ -37,3 +37,14 @@ sudo sed -i -e 's/abc/XYZ/g' /etc/nginx/nginx.conf
 sudo nginx -t
 
 sudo systemctl restart nginx
+
+
+# Certbot
+
+sudo apt install certbot python3-certbot-nginx
+
+# TODO: need to choose '2' by default (redirect all requests to https)
+sudo certbot --nginx -d whalecoiner.com -d www.whalecoiner.com
+
+# Renew certs automatically
+sudo systemctl status certbot.timer
