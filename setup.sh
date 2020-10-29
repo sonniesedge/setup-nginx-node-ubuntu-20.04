@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DOMAINNAME=whalecoiner.com
-
+USERNAME=deploy
 
 # https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 
@@ -30,7 +30,33 @@ server {
           proxy_set_header Connection 'upgrade';
           proxy_set_header Host $host;
           proxy_cache_bypass $http_upgrade;
+          
+          
         }
+        
+        # favicon.ico
+location = /favicon.ico {
+    log_not_found off;
+    access_log    off;
+}
+
+# robots.txt
+location = /robots.txt {
+    log_not_found off;
+    access_log    off;
+}
+
+# gzip
+gzip              on;
+gzip_vary         on;
+gzip_proxied      any;
+gzip_comp_level   6;
+gzip_types        text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
+
+# brotli
+#brotli            on;
+#brotli_comp_level 6;
+#brotli_types      text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
 }
 EOT
 
