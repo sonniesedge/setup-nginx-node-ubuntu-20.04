@@ -1,10 +1,24 @@
 #!/bin/bash
 
 DOMAINNAME=whalecoiner.com
-DOMAINALIASES='www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org sonniesedge.net www.sonniesedge.net sonniesedge.co.uk www.sonniesedge.co.uk'
+DOMAINALIASES=(www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org sonniesedge.net www.sonniesedge.net sonniesedge.co.uk www.sonniesedge.co.uk)
+
+DOMAINALIASES_COMMA_SEPARATED=$(printf '%s-' "${DOMAINALIASES[@]}")
+DOMAINALIASES_SPACE_SEPARATED=$(printf '%s-' "${DOMAINALIASES[@]}")
 
 DEPLOYUSER=deploy
 SUDOUSER=charlie
+
+echo "-------------------------"
+echo "CONFIG"
+echo "-------------------------"
+echo "DOMAINNAME: $DOMAINNAME"
+echo "DOMAINALIASES: $DOMAINALIASES"
+echo "DOMAINALIASES_COMMA_SEPARATED: $DOMAINALIASES_COMMA_SEPARATED"
+echo "DOMAINALIASES_SPACE_SEPARATED: $DOMAINALIASES_SPACE_SEPARATED"
+echo "DEPLOYUSER: $DEPLOYUSER"
+echo "SUDOUSER: $SUDOUSER"
+
 
 apt -qq update
 apt install nginx certbot python3-certbot-nginx nodejs build-essential -y > /dev/null
@@ -77,7 +91,7 @@ server {
     root /var/www/$DOMAINNAME/html;
     index index.html index.htm index.nginx-debian.html;
 
-    server_name $DOMAINNAME $DOMAINALIASES;
+    server_name $DOMAINNAME $DOMAINALIASES_SPACE_SEPARATED;
 
     # # ACME-challenge
     # location ^~ /.well-known/acme-challenge/ {
@@ -166,7 +180,7 @@ sudo systemctl restart nginx
 # Activate Certbot for this server block
 # TODO: need to choose '2' by default (redirect all requests to https)
 # sudo certbot --nginx -d $DOMAINNAME -d www.$DOMAINNAME
-sudo certbot --nginx --noninteractive -d $DOMAINNAME -d www.$DOMAINNAME --agree-tos -m charlie@sonniesedge.co.uk --webroot -w /var/www/html
+sudo certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED --agree-tos -m charlie@sonniesedge.co.uk
 
 # Renew certbot certificates automatically
 sudo systemctl status certbot.timer
