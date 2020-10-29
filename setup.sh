@@ -6,7 +6,7 @@ DOMAINALIASES=www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoine
 DEPLOYUSER=deploy
 SUDOUSER=charlie
 
-apt update
+apt update -qq
 apt install nginx certbot python3-certbot-nginx nodejs build-essential -y -qq > /dev/null
 
 # -------------------------------
@@ -29,7 +29,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyJ7K96iFzBFADuS71quXKmcoguMhypW8GiEwQ8e16
 EOT
 
 # Sudo user
-adduser --gecos "" $SUDOUSER 
+adduser --gecos "" --disabled-password $SUDOUSER 
 mkdir -p /home/$SUDOUSER/.ssh
 touch /home/$SUDOUSER/.ssh/authorized_keys
 chown -R $SUDOUSER:$SUDOUSER /home/$SUDOUSER/.ssh
