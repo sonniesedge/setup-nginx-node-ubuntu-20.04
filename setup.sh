@@ -174,7 +174,7 @@ server {
 EOT
 
 # Active the server block
-# sudo ln -s /etc/nginx/sites-available/$DOMAINNAME /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/$DOMAINNAME /etc/nginx/sites-enabled/
 
 # https://gist.github.com/muhammadghazali/6c2b8c80d5528e3118613746e0041263
 # sudo sed -i -e 's/# server_names_hash_bucket_size 64;/server_names_hash_bucket_size 64;/g' /etc/nginx/nginx.conf
