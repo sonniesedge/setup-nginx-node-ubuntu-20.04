@@ -1,11 +1,13 @@
 #!/bin/bash
 
 DOMAINNAME=whalecoiner.com
+DOMAINALIASES=www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org sonniesedge.net www.sonniesedge.net sonniesedge.co.uk www.sonniesedge.co.uk
+
 DEPLOYUSER=deploy
 SUDOUSER=charlie
 
 apt update
-apt install nginx certbot python3-certbot-nginx nodejs build-essential -y
+apt install nginx certbot python3-certbot-nginx nodejs build-essential -y -qq > /dev/null
 
 # -------------------------------
 # CREATE USERS AND CONFIGURE SSH
@@ -26,9 +28,6 @@ cat <<EOT >> /home/$DEPLOYUSER/.ssh/authorized_keys
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyJ7K96iFzBFADuS71quXKmcoguMhypW8GiEwQ8e16limTbFpQOxl6aGnlHBqjk3FrwtR8k5t3L3e+HzFbF+wpQEjAUHJn8AshJBrQYzT7mFlMx2fUhUU1H6KxrcEwK1TGsUjxWQn2+fLRL0ZAl5zwSfqAVMIQhZcE/7ADZkaShZMfFDFmW3Gtqp+UCCBHfFcGKIQy+fvJguNds67MuRh2fJwxEu0E7iv74wG2O937oUPSUxP36azGJ7l3nZz2smKogVhpiOlKfXm6PoBeqleTRhfw+aoWoZ5LUWeLkr+4gB59p8XsfyJJoW9CtP6MZMtjOlxv/7GYRWlv+bekVM2fF1ek/Csw0EjtgjlQohaWhW4EklnJ5fNtR0NVMR4L9Bn2ll73mbwf+/4Rx/CD+pffdYV0YTws7M/z32qbUc+IHOSbHGeFhnNCMbk8I4rLgm7/sNvtb3uF7S9Y8Ewe012LvCSCPwrVuHMobKGbJt2F7ZeOlk3Uf+oG0iRTEU7Ngmq8EofrMubhSFUjcC4KzhlUSu/fniAsFJPk2zVyPtU205NwdyWEY7+RCyvwwHHV0yMuhbBc99eUUKpBQI94PaZfAicCsLQSVN9ldQ5vvh7CKJrUJRfq2yCmmRG0EhmSjpB8YUcgT9RdM7kD+76BG0MLMv4ThDNnuCLSnMHnTjMP7w==
 EOT
 
-
-
-
 # Sudo user
 adduser --gecos "" $SUDOUSER 
 mkdir -p /home/$SUDOUSER/.ssh
@@ -42,15 +41,17 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC1SuXSEyv07abIrcbkw/U7uhgJdTsIffiG7XOLIgEL
 EOT
 
 # Ensure SSH password logins are disabled
-sudo sed -i -e 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
-
+grep -q 'PasswordAuthentication no' /etc/ssh/sshd_config 2> /dev/null; echo $?
+if [ $? > 0 ]; then
+  sed -i -e 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
+fi
 
 # Disable SSH root login
-sudo sed -i -e 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
-
-cat <<EOT >> /etc/ssh/sshd_config
-PermitRootLogin no
-EOT
+grep -q 'PermitRootLogin no' /etc/ssh/sshd_config 2> /dev/null; echo $?
+if [ $? > 0 ]; then
+  sed -i -e 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
+  sed -i -e 's/PermitRootLogin without-password/PermitRootLogin no/g' /etc/ssh/sshd_config
+fi
 
 # ----------------
 # CONFIGURE NGINX
@@ -76,7 +77,7 @@ server {
     root /var/www/$DOMAINNAME/html;
     index index.html index.htm index.nginx-debian.html;
 
-    server_name $DOMAINNAME www.$DOMAINNAME;
+    server_name $DOMAINNAME $DOMAINALIASES;
 
     # # ACME-challenge
     # location ^~ /.well-known/acme-challenge/ {
@@ -164,7 +165,8 @@ sudo systemctl restart nginx
 
 # Activate Certbot for this server block
 # TODO: need to choose '2' by default (redirect all requests to https)
-sudo certbot --nginx -d $DOMAINNAME -d www.$DOMAINNAME
+# sudo certbot --nginx -d $DOMAINNAME -d www.$DOMAINNAME
+sudo certbot --nginx --noninteractive -d $DOMAINNAME -d www.$DOMAINNAME --agree-tos -m charlie@sonniesedge.co.uk --webroot -w /var/www/html
 
 # Renew certbot certificates automatically
 sudo systemctl status certbot.timer
