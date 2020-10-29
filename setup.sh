@@ -1,22 +1,70 @@
 #!/bin/bash
 
 DOMAINNAME=whalecoiner.com
-USERNAME=deploy
+DEPLOYUSER=deploy
+SUDOUSER=charlie
 
-sudo apt update
-sudo apt install nginx certbot python3-certbot-nginx nodejs build-essential -y
+apt update
+apt install nginx certbot python3-certbot-nginx nodejs build-essential -y
+
+# -------------------------------
+# CREATE USERS AND CONFIGURE SSH
+# -------------------------------
+# https://askubuntu.com/questions/94060/run-adduser-non-interactively
+
+# Deploy user
+adduser --gecos "" --disabled-password $DEPLOYUSER 
+  # --gecos is for skipping the "Full name,Room number,Work phone,Home phone" stuff when creating a new user
+  # https://en.wikipedia.org/wiki/Gecos_field for the history buffs
+mkdir -p /home/$DEPLOYUSER/.ssh
+touch /home/$DEPLOYUSER/.ssh/authorized_keys
+chown -R $DEPLOYUSER:$DEPLOYUSER /home/$DEPLOYUSER/.ssh
+chmod 700 /home/$DEPLOYUSER/.ssh
+chmod 644 /home/$DEPLOYUSER/.ssh/authorized_keys
+
+cat <<EOT >> /home/$DEPLOYUSER/.ssh/authorized_keys
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyJ7K96iFzBFADuS71quXKmcoguMhypW8GiEwQ8e16limTbFpQOxl6aGnlHBqjk3FrwtR8k5t3L3e+HzFbF+wpQEjAUHJn8AshJBrQYzT7mFlMx2fUhUU1H6KxrcEwK1TGsUjxWQn2+fLRL0ZAl5zwSfqAVMIQhZcE/7ADZkaShZMfFDFmW3Gtqp+UCCBHfFcGKIQy+fvJguNds67MuRh2fJwxEu0E7iv74wG2O937oUPSUxP36azGJ7l3nZz2smKogVhpiOlKfXm6PoBeqleTRhfw+aoWoZ5LUWeLkr+4gB59p8XsfyJJoW9CtP6MZMtjOlxv/7GYRWlv+bekVM2fF1ek/Csw0EjtgjlQohaWhW4EklnJ5fNtR0NVMR4L9Bn2ll73mbwf+/4Rx/CD+pffdYV0YTws7M/z32qbUc+IHOSbHGeFhnNCMbk8I4rLgm7/sNvtb3uF7S9Y8Ewe012LvCSCPwrVuHMobKGbJt2F7ZeOlk3Uf+oG0iRTEU7Ngmq8EofrMubhSFUjcC4KzhlUSu/fniAsFJPk2zVyPtU205NwdyWEY7+RCyvwwHHV0yMuhbBc99eUUKpBQI94PaZfAicCsLQSVN9ldQ5vvh7CKJrUJRfq2yCmmRG0EhmSjpB8YUcgT9RdM7kD+76BG0MLMv4ThDNnuCLSnMHnTjMP7w==
+EOT
+
+
+
+
+# Sudo user
+adduser --gecos "" $SUDOUSER 
+mkdir -p /home/$SUDOUSER/.ssh
+touch /home/$SUDOUSER/.ssh/authorized_keys
+chown -R $SUDOUSER:$SUDOUSER /home/$SUDOUSER/.ssh
+chmod 700 /home/$SUDOUSER/.ssh
+chmod 644 /home/$SUDOUSER/.ssh/authorized_keys
+
+cat <<EOT >> /home/$SUDOUSER/.ssh/authorized_keys
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC1SuXSEyv07abIrcbkw/U7uhgJdTsIffiG7XOLIgELG6KphYsIlC/lnoq5P0xj9oZ7W28zX+qIkg/PUSMQS3uJpynBS1y43v51Eac6SzhtH56SrAhMDfVJTclMaUAIMnTb0lN/vhD6w6bsz95AoWwInHja/4J3a1aso0qWwdyrLFZ8Y5vDLokn27EdKuqZAPfzk3VIF+zh1OXnnP3XeeTsAqzVOPdzTc1XlAEokgnmizjgIuXOn6yIMAct24r6TIgwQPBMPjP5pN7gtwY1StZXk62N6s1pm7obXLaJYeHGIHNhKbz3YW9hy23hbBOPA4WD406rICIg2NxF7GXccBAo9V46glpncWtTnBbpmItXXJ842gW+NpuHks2mn3evVFw70KRO2z2H/YmZoCBFXzxNbPquaZPaT7i+u8JrUSQz8Sn3XVgmXSzDIqraJxQtKVKx95MyLd1UTwcMeMf4zmsnfdgBjhIIGS3k8B9QlZxDbYhmhL+/FW14gG7zU7lze0lrgXqbH+5LBHyfyg98GzJKOGj9a6b3bvbAJcSl4PxJIpEISHAh57DkN76UPFT0dloUic2GjJ+sRLr7cdJvoUfCJ5pk7i19jhb8pZM09bG/QEJEkOIFH6ZtkT1miGLZzD5tHt9ORuZlq3aWhP2yRuKsA51gCY+d1KJuj636+LsY9Q==
+EOT
+
+# Ensure SSH password logins are disabled
+sudo sed -i -e 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
+
+
+# Disable SSH root login
+sudo sed -i -e 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
+
+cat <<EOT >> /etc/ssh/sshd_config
+PermitRootLogin no
+EOT
 
 # ----------------
 # CONFIGURE NGINX
 # ----------------
 # https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 
-# Allow firewall access
+# Allow access through firewall for Nginx
 sudo ufw allow 'Nginx Full'
 
-# Make sure our user owns it all
+# Make sure our lovely user owns it all
 sudo mkdir -p /var/www/$DOMAINNAME/html
-sudo chown -R $USER:$USER /var/www/$DOMAINNAME/html
+sudo mkdir -p /var/www/$DOMAINNAME/content
+sudo mkdir -p /var/www/$DOMAINNAME/data
+sudo chown -R $DEPLOYUSER:$DEPLOYUSER /var/www/$DOMAINNAME
 sudo chmod -R 755 /var/www/$DOMAINNAME
 
 ## Add a server block for the site
@@ -104,9 +152,8 @@ EOT
 # Active the server block
 sudo ln -s /etc/nginx/sites-available/$DOMAINNAME /etc/nginx/sites-enabled/
 
-# TODO: Remove the '#' in the following string:
-# '# server_names_hash_bucket_size 64;'
-sudo sed -i -e 's/# server_names_hash_bucket_size 64;/server_names_hash_bucket_size 64;/g' c
+# https://gist.github.com/muhammadghazali/6c2b8c80d5528e3118613746e0041263
+# sudo sed -i -e 's/# server_names_hash_bucket_size 64;/server_names_hash_bucket_size 64;/g' /etc/nginx/nginx.conf
 
 # Config okay with nginx?
 sudo nginx -t
@@ -137,6 +184,6 @@ sudo npm install pm2@latest -g
 
 pm2 startup systemd
 
-sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $USERNAME --hp /home/$USERNAME
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $DEPLOYUSER --hp /home/$DEPLOYUSER
 
-pm2 save
+# pm2 save
