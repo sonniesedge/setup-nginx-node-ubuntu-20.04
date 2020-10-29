@@ -3,7 +3,7 @@
 DOMAINNAME=whalecoiner.com
 DOMAINALIASES=(www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org sonniesedge.net www.sonniesedge.net sonniesedge.co.uk www.sonniesedge.co.uk)
 
-DOMAINALIASES_COMMA_SEPARATED=$(printf '%s, ' "${DOMAINALIASES[@]}")
+DOMAINALIASES_COMMA_SEPARATED=$(printf '%s,' "${DOMAINALIASES[@]}")
 DOMAINALIASES_COMMA_SEPARATED="${DOMAINALIASES_COMMA_SEPARATED%,}"
 DOMAINALIASES_SPACE_SEPARATED=$(printf '%s ' "${DOMAINALIASES[@]}")
 DOMAINALIASES_SPACE_SEPARATED="${DOMAINALIASES_SPACE_SEPARATED% }"
