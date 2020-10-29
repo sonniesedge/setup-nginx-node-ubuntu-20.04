@@ -4,7 +4,7 @@ DOMAINNAME=whalecoiner.com
 DOMAINALIASES=(www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org sonniesedge.net www.sonniesedge.net sonniesedge.co.uk www.sonniesedge.co.uk)
 
 DOMAINALIASES_COMMA_SEPARATED=$(printf '%s, ' "${DOMAINALIASES[@]}")
-DOMAINALIASES_COMMA_SEPARATED="${DOMAINALIASES_COMMA_SEPARATED%, }"
+DOMAINALIASES_COMMA_SEPARATED="${DOMAINALIASES_COMMA_SEPARATED%,}"
 DOMAINALIASES_SPACE_SEPARATED=$(printf '%s ' "${DOMAINALIASES[@]}")
 DOMAINALIASES_SPACE_SEPARATED="${DOMAINALIASES_SPACE_SEPARATED% }"
 
@@ -189,7 +189,7 @@ sudo systemctl restart nginx
 echo "Adding certbot LetsEncrypt certificate"
 # TODO: need to choose '2' by default (redirect all requests to https)
 # sudo certbot --nginx -d $DOMAINNAME -d www.$DOMAINNAME
-sudo certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED --agree-tos -m charlie@sonniesedge.co.uk
+certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED --agree-tos -m charlie@sonniesedge.co.uk
 
 # Renew certbot certificates automatically
 echo "Adding auto-renew for certbot"
