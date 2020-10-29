@@ -7,7 +7,7 @@ DEPLOYUSER=deploy
 SUDOUSER=charlie
 
 apt -qq update
-apt -qq install nginx certbot python3-certbot-nginx nodejs build-essential > /dev/null
+apt install nginx certbot python3-certbot-nginx nodejs build-essential -y > /dev/null
 
 # -------------------------------
 # CREATE USERS AND CONFIGURE SSH
