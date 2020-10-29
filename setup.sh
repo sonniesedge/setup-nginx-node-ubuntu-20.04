@@ -22,8 +22,8 @@ echo "DEPLOYUSER: $DEPLOYUSER"
 echo "SUDOUSER: $SUDOUSER"
 
 
-apt -qq update
-apt install nginx certbot python3-certbot-nginx nodejs build-essential -y > /dev/null
+apt-get -qq update
+apt-get install nginx certbot python3-certbot-nginx nodejs build-essential -y > /dev/null
 
 # -------------------------------
 # CREATE USERS AND CONFIGURE SSH
