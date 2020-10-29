@@ -3,13 +3,18 @@
 DOMAINNAME=whalecoiner.com
 USERNAME=deploy
 
-# INSTALL AND CONFIGURE NGINX
+sudo apt update
+sudo apt install nginx certbot python3-certbot-nginx nodejs build-essential -y
+
+# ----------------
+# CONFIGURE NGINX
+# ----------------
 # https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 
-sudo apt update
-sudo apt install nginx
+# Allow firewall access
 sudo ufw allow 'Nginx Full'
 
+# Make sure our user owns it all
 sudo mkdir -p /var/www/$DOMAINNAME/html
 sudo chown -R $USER:$USER /var/www/$DOMAINNAME/html
 sudo chmod -R 755 /var/www/$DOMAINNAME
@@ -32,37 +37,37 @@ server {
 
     location / {
         proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
+        # proxy_http_version 1.1;
+        # proxy_set_header Upgrade $http_upgrade;
+        # proxy_set_header Connection 'upgrade';
+        # proxy_set_header Host $host;
+        # proxy_cache_bypass $http_upgrade;
 
         # proxy_http_version                 1.1;
         # proxy_cache_bypass                 $http_upgrade;
 
-        # # Proxy headers
-        # proxy_set_header Upgrade           $http_upgrade;
-        # proxy_set_header Connection        "upgrade";
-        # proxy_set_header Host              $host;
-        # proxy_set_header X-Real-IP         $remote_addr;
-        # proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-        # proxy_set_header X-Forwarded-Proto $scheme;
-        # proxy_set_header X-Forwarded-Host  $host;
-        # proxy_set_header X-Forwarded-Port  $server_port;
+        # Proxy headers
+        proxy_set_header Upgrade           $http_upgrade;
+        proxy_set_header Connection        "upgrade";
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host  $host;
+        proxy_set_header X-Forwarded-Port  $server_port;
 
-        # # Proxy timeouts
-        # proxy_connect_timeout              60s;
-        # proxy_send_timeout                 60s;
-        # proxy_read_timeout                 60s; 
+        # Proxy timeouts
+        proxy_connect_timeout              60s;
+        proxy_send_timeout                 60s;
+        proxy_read_timeout                 60s; 
 
-        # # security headers
-        # add_header X-Frame-Options           "SAMEORIGIN" always;
-        # add_header X-XSS-Protection          "1; mode=block" always;
-        # add_header X-Content-Type-Options    "nosniff" always;
-        # add_header Referrer-Policy           "no-referrer-when-downgrade" always;
-        # add_header Content-Security-Policy   "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
-        # add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        # security headers
+        add_header X-Frame-Options           "SAMEORIGIN" always;
+        add_header X-XSS-Protection          "1; mode=block" always;
+        add_header X-Content-Type-Options    "nosniff" always;
+        add_header Referrer-Policy           "no-referrer-when-downgrade" always;
+        add_header Content-Security-Policy   "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
 
         # # . files
         # location ~ /\.(?!well-known) {
@@ -96,38 +101,37 @@ server {
 }
 EOT
 
+# Active the server block
 sudo ln -s /etc/nginx/sites-available/$DOMAINNAME /etc/nginx/sites-enabled/
 
 # TODO: Remove the '#' in the following string:
 # '# server_names_hash_bucket_size 64;'
-sudo sed -i -e 's/# server_names_hash_bucket_size 64;/server_names_hash_bucket_size 64;/g' /etc/nginx/nginx.conf
+sudo sed -i -e 's/# server_names_hash_bucket_size 64;/server_names_hash_bucket_size 64;/g' c
 
-# Config okay?
+# Config okay with nginx?
 sudo nginx -t
+
+# TODO: Fail script here if not
 
 sudo systemctl restart nginx
 
-# Install Certbot
-sudo apt install certbot python3-certbot-nginx
-
+# Activate Certbot for this server block
 # TODO: need to choose '2' by default (redirect all requests to https)
 sudo certbot --nginx -d $DOMAINNAME -d www.$DOMAINNAME
 
-# Renew certs automatically
+# Renew certbot certificates automatically
 sudo systemctl status certbot.timer
 
 sudo systemctl restart nginx
 
-# INSTALL NODE AND PM2
+# ------------------------------------
+# INSTALL NODE AND PM2, AND CONFIGURE
+# ------------------------------------
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-20-04
 
 curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh
 
 sudo bash nodesource_setup.sh
-
-sudo apt-get install nodejs
-
-sudo apt-get install build-essential
 
 sudo npm install pm2@latest -g
 
