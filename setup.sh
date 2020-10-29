@@ -20,7 +20,7 @@ server {
     listen 80;
     listen [::]:80;
 
-    root /var/www/whalecoiner.com/html;
+    root /var/www/$DOMAINNAME/html;
     index index.html index.htm index.nginx-debian.html;
 
     server_name $DOMAINNAME www.$DOMAINNAME;
