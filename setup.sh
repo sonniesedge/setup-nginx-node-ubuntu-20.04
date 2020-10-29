@@ -29,6 +29,7 @@ apt install nginx certbot python3-certbot-nginx nodejs build-essential -y > /dev
 # https://askubuntu.com/questions/94060/run-adduser-non-interactively
 
 # Deploy user
+echo "Creating $DEPLOYUSER"
 adduser --gecos "" --disabled-password $DEPLOYUSER 
   # --gecos is for skipping the "Full name,Room number,Work phone,Home phone" stuff when creating a new user
   # https://en.wikipedia.org/wiki/Gecos_field for the history buffs
@@ -43,6 +44,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyJ7K96iFzBFADuS71quXKmcoguMhypW8GiEwQ8e16
 EOT
 
 # Sudo user
+echo "Creating $SUDOUSER"
 adduser --gecos "" --disabled-password $SUDOUSER 
 mkdir -p /home/$SUDOUSER/.ssh
 touch /home/$SUDOUSER/.ssh/authorized_keys
@@ -55,12 +57,14 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC1SuXSEyv07abIrcbkw/U7uhgJdTsIffiG7XOLIgEL
 EOT
 
 # Ensure SSH password logins are disabled
+echo "Disabling SSH password logins"
 grep -q 'PasswordAuthentication no' /etc/ssh/sshd_config 2> /dev/null; echo $?
 if [ $? > 0 ]; then
   sed -i -e 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
 fi
 
 # Disable SSH root login
+echo "Disabling SSH root login"
 grep -q 'PermitRootLogin no' /etc/ssh/sshd_config 2> /dev/null; echo $?
 if [ $? > 0 ]; then
   sed -i -e 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
@@ -73,9 +77,11 @@ fi
 # https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 
 # Allow access through firewall for Nginx
+echo "Allowing nginx through firewall"
 sudo ufw allow 'Nginx Full'
 
 # Make sure our lovely user owns it all
+echo "Creating app directories"
 sudo mkdir -p /var/www/$DOMAINNAME/html
 sudo mkdir -p /var/www/$DOMAINNAME/content
 sudo mkdir -p /var/www/$DOMAINNAME/data
@@ -83,6 +89,7 @@ sudo chown -R $DEPLOYUSER:$DEPLOYUSER /var/www/$DOMAINNAME
 sudo chmod -R 755 /var/www/$DOMAINNAME
 
 ## Add a server block for the site
+echo "Adding nginx server block for $DOMAINNAME"
 sudo tee -a /etc/nginx/sites-available/$DOMAINNAME >/dev/null <<EOT
 server {
     listen 80;
@@ -173,18 +180,20 @@ EOT
 # Config okay with nginx?
 sudo nginx -t
 
-# TODO: Fail script here if not
-
+echo "Restarting nginx"
 sudo systemctl restart nginx
 
 # Activate Certbot for this server block
+echo "Adding certbot LetsEncrypt certificate"
 # TODO: need to choose '2' by default (redirect all requests to https)
 # sudo certbot --nginx -d $DOMAINNAME -d www.$DOMAINNAME
 sudo certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED --agree-tos -m charlie@sonniesedge.co.uk
 
 # Renew certbot certificates automatically
+echo "Adding auto-renew for certbot"
 sudo systemctl status certbot.timer
 
+echo "Restarting nginx"
 sudo systemctl restart nginx
 
 # ------------------------------------
@@ -192,6 +201,7 @@ sudo systemctl restart nginx
 # ------------------------------------
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-20-04
 
+echo "Installing node"
 curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh
 
 sudo bash nodesource_setup.sh
