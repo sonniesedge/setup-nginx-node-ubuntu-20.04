@@ -21,9 +21,8 @@ echo "DOMAINALIASES_SPACE_SEPARATED: $DOMAINALIASES_SPACE_SEPARATED"
 echo "DEPLOYUSER: $DEPLOYUSER"
 echo "SUDOUSER: $SUDOUSER"
 
-
 apt-get -qq update
-apt-get install nginx certbot python3-certbot-nginx nodejs build-essential -y > /dev/null
+apt-get install nginx certbot python3-certbot-nginx nodejs build-essential -y >/dev/null
 
 # -------------------------------
 # CREATE USERS AND CONFIGURE SSH
@@ -32,43 +31,45 @@ apt-get install nginx certbot python3-certbot-nginx nodejs build-essential -y > 
 
 # Deploy user
 echo "Creating $DEPLOYUSER"
-adduser --gecos "" --disabled-password $DEPLOYUSER 
-  # --gecos is for skipping the "Full name,Room number,Work phone,Home phone" stuff when creating a new user
-  # https://en.wikipedia.org/wiki/Gecos_field for the history buffs
+adduser --gecos "" --disabled-password $DEPLOYUSER
+# --gecos is for skipping the "Full name,Room number,Work phone,Home phone" stuff when creating a new user
+# https://en.wikipedia.org/wiki/Gecos_field for the history buffs
 mkdir -p /home/$DEPLOYUSER/.ssh
 touch /home/$DEPLOYUSER/.ssh/authorized_keys
 chown -R $DEPLOYUSER:$DEPLOYUSER /home/$DEPLOYUSER/.ssh
 chmod 700 /home/$DEPLOYUSER/.ssh
 chmod 644 /home/$DEPLOYUSER/.ssh/authorized_keys
 
-cat <<EOT >> /home/$DEPLOYUSER/.ssh/authorized_keys
+cat <<EOT >>/home/$DEPLOYUSER/.ssh/authorized_keys
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyJ7K96iFzBFADuS71quXKmcoguMhypW8GiEwQ8e16limTbFpQOxl6aGnlHBqjk3FrwtR8k5t3L3e+HzFbF+wpQEjAUHJn8AshJBrQYzT7mFlMx2fUhUU1H6KxrcEwK1TGsUjxWQn2+fLRL0ZAl5zwSfqAVMIQhZcE/7ADZkaShZMfFDFmW3Gtqp+UCCBHfFcGKIQy+fvJguNds67MuRh2fJwxEu0E7iv74wG2O937oUPSUxP36azGJ7l3nZz2smKogVhpiOlKfXm6PoBeqleTRhfw+aoWoZ5LUWeLkr+4gB59p8XsfyJJoW9CtP6MZMtjOlxv/7GYRWlv+bekVM2fF1ek/Csw0EjtgjlQohaWhW4EklnJ5fNtR0NVMR4L9Bn2ll73mbwf+/4Rx/CD+pffdYV0YTws7M/z32qbUc+IHOSbHGeFhnNCMbk8I4rLgm7/sNvtb3uF7S9Y8Ewe012LvCSCPwrVuHMobKGbJt2F7ZeOlk3Uf+oG0iRTEU7Ngmq8EofrMubhSFUjcC4KzhlUSu/fniAsFJPk2zVyPtU205NwdyWEY7+RCyvwwHHV0yMuhbBc99eUUKpBQI94PaZfAicCsLQSVN9ldQ5vvh7CKJrUJRfq2yCmmRG0EhmSjpB8YUcgT9RdM7kD+76BG0MLMv4ThDNnuCLSnMHnTjMP7w==
 EOT
 
 # Sudo user
 echo "Creating $SUDOUSER"
-adduser --gecos "" --disabled-password $SUDOUSER 
+adduser --gecos "" --disabled-password $SUDOUSER
 mkdir -p /home/$SUDOUSER/.ssh
 touch /home/$SUDOUSER/.ssh/authorized_keys
 chown -R $SUDOUSER:$SUDOUSER /home/$SUDOUSER/.ssh
 chmod 700 /home/$SUDOUSER/.ssh
 chmod 644 /home/$SUDOUSER/.ssh/authorized_keys
 
-cat <<EOT >> /home/$SUDOUSER/.ssh/authorized_keys
+cat <<EOT >>/home/$SUDOUSER/.ssh/authorized_keys
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC1SuXSEyv07abIrcbkw/U7uhgJdTsIffiG7XOLIgELG6KphYsIlC/lnoq5P0xj9oZ7W28zX+qIkg/PUSMQS3uJpynBS1y43v51Eac6SzhtH56SrAhMDfVJTclMaUAIMnTb0lN/vhD6w6bsz95AoWwInHja/4J3a1aso0qWwdyrLFZ8Y5vDLokn27EdKuqZAPfzk3VIF+zh1OXnnP3XeeTsAqzVOPdzTc1XlAEokgnmizjgIuXOn6yIMAct24r6TIgwQPBMPjP5pN7gtwY1StZXk62N6s1pm7obXLaJYeHGIHNhKbz3YW9hy23hbBOPA4WD406rICIg2NxF7GXccBAo9V46glpncWtTnBbpmItXXJ842gW+NpuHks2mn3evVFw70KRO2z2H/YmZoCBFXzxNbPquaZPaT7i+u8JrUSQz8Sn3XVgmXSzDIqraJxQtKVKx95MyLd1UTwcMeMf4zmsnfdgBjhIIGS3k8B9QlZxDbYhmhL+/FW14gG7zU7lze0lrgXqbH+5LBHyfyg98GzJKOGj9a6b3bvbAJcSl4PxJIpEISHAh57DkN76UPFT0dloUic2GjJ+sRLr7cdJvoUfCJ5pk7i19jhb8pZM09bG/QEJEkOIFH6ZtkT1miGLZzD5tHt9ORuZlq3aWhP2yRuKsA51gCY+d1KJuj636+LsY9Q==
 EOT
 
 # Ensure SSH password logins are disabled
 echo "Disabling SSH password logins"
-grep -q 'PasswordAuthentication no' /etc/ssh/sshd_config 2> /dev/null; echo $?
-if [ $? > 0 ]; then
+grep -q 'PasswordAuthentication no' /etc/ssh/sshd_config 2>/dev/null
+echo $?
+if [ $? ] >0; then
   sed -i -e 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
 fi
 
 # Disable SSH root login
 echo "Disabling SSH root login"
-grep -q 'PermitRootLogin no' /etc/ssh/sshd_config 2> /dev/null; echo $?
-if [ $? > 0 ]; then
+grep -q 'PermitRootLogin no' /etc/ssh/sshd_config 2>/dev/null
+echo $?
+if [ $? ] >0; then
   sed -i -e 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
   sed -i -e 's/PermitRootLogin without-password/PermitRootLogin no/g' /etc/ssh/sshd_config
 fi
@@ -108,7 +109,13 @@ server {
     # }
 
     location / {
+        proxy_set_header HOST $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_http_version 1.1;
         proxy_pass http://localhost:3000;
+
         # proxy_http_version 1.1;
         # proxy_set_header Upgrade $http_upgrade;
         # proxy_set_header Connection 'upgrade';
