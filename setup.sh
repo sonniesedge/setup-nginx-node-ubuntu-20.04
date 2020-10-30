@@ -22,7 +22,7 @@ echo "DEPLOYUSER: $DEPLOYUSER"
 echo "SUDOUSER: $SUDOUSER"
 
 apt-get -qq update
-apt-get install nginx certbot python3-certbot-nginx nodejs build-essential -y >/dev/null
+apt-get install nginx certbot python3-certbot-nginx nodejs build-essential libssl-dev -y >/dev/null
 
 # -------------------------------
 # CREATE USERS AND CONFIGURE SSH
@@ -214,9 +214,9 @@ sudo systemctl restart nginx
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-20-04
 
 echo "Installing node"
-curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.36.0/install.sh | bash
 
-sudo bash nodesource_setup.sh
+command -v nvm
 
 sudo npm install pm2@latest -g
 
