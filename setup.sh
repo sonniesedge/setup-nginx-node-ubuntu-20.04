@@ -199,7 +199,7 @@ sudo systemctl restart nginx
 echo "Adding certbot LetsEncrypt certificate"
 # TODO: need to choose '2' by default (redirect all requests to https)
 # sudo certbot --nginx -d $DOMAINNAME -d www.$DOMAINNAME
-certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED --agree-tos -m charlie@sonniesedge.co.uk
+certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED  --redirect --agree-tos -m charlie@sonniesedge.co.uk
 
 # Renew certbot certificates automatically
 echo "Adding auto-renew for certbot"
