@@ -12,7 +12,7 @@ DEPLOYUSER=deploy
 SUDOUSER=charlie
 
 echo "-------------------------"
-echo "CONFIG"
+echo "| CONFIG"
 echo "-------------------------"
 echo "DOMAINNAME: $DOMAINNAME"
 echo "DOMAINALIASES: ${DOMAINALIASES[@]}"
@@ -22,7 +22,7 @@ echo "DEPLOYUSER: $DEPLOYUSER"
 echo "SUDOUSER: $SUDOUSER"
 
 apt-get -qq update
-apt-get install nginx certbot python3-certbot-nginx nodejs build-essential libssl-dev -y >/dev/null
+apt-get install nginx certbot python3-certbot-nginx nodejs build-essential libssl-dev -y 
 
 # -------------------------------
 # CREATE USERS AND CONFIGURE SSH
@@ -30,7 +30,7 @@ apt-get install nginx certbot python3-certbot-nginx nodejs build-essential libss
 # https://askubuntu.com/questions/94060/run-adduser-non-interactively
 
 # Deploy user
-echo "Creating $DEPLOYUSER"
+echo ">>>> Creating $DEPLOYUSER"
 adduser --gecos "" --disabled-password $DEPLOYUSER
 # --gecos is for skipping the "Full name,Room number,Work phone,Home phone" stuff when creating a new user
 # https://en.wikipedia.org/wiki/Gecos_field for the history buffs
@@ -45,7 +45,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyJ7K96iFzBFADuS71quXKmcoguMhypW8GiEwQ8e16
 EOT
 
 # Sudo user
-echo "Creating $SUDOUSER"
+echo ">>>> Creating $SUDOUSER"
 adduser --gecos "" --disabled-password $SUDOUSER
 mkdir -p /home/$SUDOUSER/.ssh
 touch /home/$SUDOUSER/.ssh/authorized_keys
@@ -58,7 +58,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC1SuXSEyv07abIrcbkw/U7uhgJdTsIffiG7XOLIgEL
 EOT
 
 # Ensure SSH password logins are disabled
-echo "Disabling SSH password logins"
+echo ">>>> Disabling SSH password logins"
 grep -q 'PasswordAuthentication no' /etc/ssh/sshd_config 2>/dev/null
 echo $?
 if [ $? ] >0; then
@@ -66,7 +66,7 @@ if [ $? ] >0; then
 fi
 
 # Disable SSH root login
-echo "Disabling SSH root login"
+echo ">>>> Disabling SSH root login"
 grep -q 'PermitRootLogin no' /etc/ssh/sshd_config 2>/dev/null
 echo $?
 if [ $? ] >0; then
@@ -80,20 +80,20 @@ fi
 # https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 
 # Allow access through firewall for Nginx
-echo "Allowing nginx through firewall"
-sudo ufw allow 'Nginx Full'
+echo ">>>> Allowing nginx through firewall"
+ufw allow 'Nginx Full'
 
 # Make sure our lovely user owns it all
-echo "Creating app directories"
-sudo mkdir -p /var/www/$DOMAINNAME/html
-sudo mkdir -p /var/www/$DOMAINNAME/content
-sudo mkdir -p /var/www/$DOMAINNAME/data
-sudo chown -R $DEPLOYUSER:$DEPLOYUSER /var/www/$DOMAINNAME
-sudo chmod -R 755 /var/www/$DOMAINNAME
+echo ">>>> Creating app directories"
+mkdir -p /var/www/$DOMAINNAME/html
+mkdir -p /var/www/$DOMAINNAME/content
+mkdir -p /var/www/$DOMAINNAME/data
+chown -R $DEPLOYUSER:$DEPLOYUSER /var/www/$DOMAINNAME
+chmod -R 755 /var/www/$DOMAINNAME
 
 ## Add a server block for the site
-echo "Adding nginx server block for $DOMAINNAME"
-sudo tee -a /etc/nginx/sites-available/$DOMAINNAME >/dev/null <<EOT
+echo ">>>> Adding nginx server block for $DOMAINNAME"
+tee -a /etc/nginx/sites-available/$DOMAINNAME >/dev/null <<EOT
 server {
     listen 80;
     listen [::]:80;
@@ -184,44 +184,45 @@ server {
 EOT
 
 # Active the server block
-sudo ln -s /etc/nginx/sites-available/$DOMAINNAME /etc/nginx/sites-enabled/
+echo ">>>> Activating server block"
+ln -s /etc/nginx/sites-available/$DOMAINNAME /etc/nginx/sites-enabled/
 
 # https://gist.github.com/muhammadghazali/6c2b8c80d5528e3118613746e0041263
-# sudo sed -i -e 's/# server_names_hash_bucket_size 64;/server_names_hash_bucket_size 64;/g' /etc/nginx/nginx.conf
+# sed -i -e 's/# server_names_hash_bucket_size 64;/server_names_hash_bucket_size 64;/g' /etc/nginx/nginx.conf
 
 # Config okay with nginx?
-sudo nginx -t
+nginx -t
 
-echo "Restarting nginx"
-sudo systemctl restart nginx
+echo ">>>> Restarting nginx"
+systemctl restart nginx
 
 # Activate Certbot for this server block
-echo "Adding certbot LetsEncrypt certificate"
-# TODO: need to choose '2' by default (redirect all requests to https)
-# sudo certbot --nginx -d $DOMAINNAME -d www.$DOMAINNAME
+echo ">>>> Adding certbot LetsEncrypt certificate"
 certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED  --redirect --agree-tos -m charlie@sonniesedge.co.uk
 
 # Renew certbot certificates automatically
-echo "Adding auto-renew for certbot"
-sudo systemctl status certbot.timer
+echo ">>>> Adding auto-renew for certbot"
+systemctl status certbot.timer
 
-echo "Restarting nginx"
-sudo systemctl restart nginx
+echo ">>>> Restarting nginx"
+systemctl restart nginx
 
 # ------------------------------------
 # INSTALL NODE AND PM2, AND CONFIGURE
 # ------------------------------------
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-20-04
 
-echo "Installing node"
+echo ">>>> Installing node"
 
 curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
 apt-get install -y nodejs
 
-sudo npm install pm2@latest -g
+npm install pm2@latest -g
 
-sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $DEPLOYUSER --hp /home/$DEPLOYUSER
+env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $DEPLOYUSER --hp /home/$DEPLOYUSER
 
+echo ">>>> Switching to $SUDOUSER to activate pm2"
+su - $SUDOUSER
 pm2 startup systemd
 
 # pm2 save
