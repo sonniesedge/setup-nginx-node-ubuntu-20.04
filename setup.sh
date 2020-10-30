@@ -215,11 +215,8 @@ sudo systemctl restart nginx
 
 echo "Installing node"
 
-su - $DEPLOYUSER
-
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.36.0/install.sh | bash
-
-command -v nvm
+curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+apt-get install -y nodejs
 
 sudo npm install pm2@latest -g
 
