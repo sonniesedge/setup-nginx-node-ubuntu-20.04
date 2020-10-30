@@ -85,7 +85,7 @@ ufw allow 'Nginx Full'
 
 # Make sure our lovely user owns it all
 echo ">>>> Creating app directories"
-mkdir -p /var/www/$DOMAINNAME/html
+mkdir -p /var/www/$DOMAINNAME/public
 mkdir -p /var/www/$DOMAINNAME/content
 mkdir -p /var/www/$DOMAINNAME/data
 chown -R $DEPLOYUSER:$DEPLOYUSER /var/www/$DOMAINNAME
