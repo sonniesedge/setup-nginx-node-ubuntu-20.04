@@ -221,8 +221,8 @@ npm install pm2@latest -g
 
 env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $DEPLOYUSER --hp /home/$DEPLOYUSER
 
-echo ">>>> Switching to $SUDOUSER to activate pm2"
-su - $SUDOUSER
+# echo ">>>> Switching to $SUDOUSER to activate pm2"
+# su - $SUDOUSER
 pm2 startup systemd
 
 # pm2 save
