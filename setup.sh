@@ -98,7 +98,7 @@ server {
     listen 80;
     listen [::]:80;
 
-    root /var/www/$DOMAINNAME/html;
+    root /var/www/$DOMAINNAME/public;
     index index.html index.htm index.nginx-debian.html;
 
     server_name $DOMAINNAME $DOMAINALIASES_SPACE_SEPARATED;
