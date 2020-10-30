@@ -214,13 +214,15 @@ sudo systemctl restart nginx
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-20-04
 
 echo "Installing node"
+
+su - $DEPLOYUSER
+
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.36.0/install.sh | bash
 
 command -v nvm
 
 sudo npm install pm2@latest -g
 
-sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $SUDOUSER --hp /home/$SUDOUSER
 sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $DEPLOYUSER --hp /home/$DEPLOYUSER
 
 pm2 startup systemd
