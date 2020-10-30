@@ -210,8 +210,9 @@ sudo bash nodesource_setup.sh
 
 sudo npm install pm2@latest -g
 
-pm2 startup systemd
-
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $SUDOUSER --hp /home/$SUDOUSER
 sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $DEPLOYUSER --hp /home/$DEPLOYUSER
+
+pm2 startup systemd
 
 # pm2 save
