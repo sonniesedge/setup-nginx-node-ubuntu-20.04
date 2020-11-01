@@ -48,7 +48,7 @@ EOT
 echo ">>>> Creating $SUDOUSER"
 # TODO: supply encrypted password for this user
 # adduser --gecos "" --disabled-password $SUDOUSER
-useradd -m $SUDOUSER -p $1$cPANTVBa$766MM8lsGv/W3MeLRoWrj0 -s /bin/bash 
+useradd -m $SUDOUSER -p '$1$cPANTVBa$766MM8lsGv/W3MeLRoWrj0' -s /bin/bash 
 mkdir -p /home/$SUDOUSER/.ssh
 touch /home/$SUDOUSER/.ssh/authorized_keys
 chown -R $SUDOUSER:$SUDOUSER /home/$SUDOUSER/.ssh
