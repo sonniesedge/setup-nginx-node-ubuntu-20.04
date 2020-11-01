@@ -22,7 +22,7 @@ echo "DEPLOYUSER: $DEPLOYUSER"
 echo "SUDOUSER: $SUDOUSER"
 
 apt-get -qq update
-apt-get install nginx certbot python3-certbot-nginx nodejs build-essential libssl-dev -y 
+apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades -y 
 
 # -------------------------------
 # CREATE USERS AND CONFIGURE SSH
@@ -46,7 +46,9 @@ EOT
 
 # Sudo user
 echo ">>>> Creating $SUDOUSER"
-adduser --gecos "" --disabled-password $SUDOUSER
+# TODO: supply encrypted password for this user
+# adduser --gecos "" --disabled-password $SUDOUSER
+useradd -m -p $6$MwaV4ckP$TlMHTgqXpJ60sw7ZO3C9Ax0/BbjdDcL9R7uVcfQEnjh16Vh.FrwDIa/6RR6UEDsjqflOUMRZkXvMQRHkiQ1.f1 -s /bin/bash $SUDOUSER
 mkdir -p /home/$SUDOUSER/.ssh
 touch /home/$SUDOUSER/.ssh/authorized_keys
 chown -R $SUDOUSER:$SUDOUSER /home/$SUDOUSER/.ssh
@@ -222,7 +224,7 @@ npm install pm2@latest -g
 env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $DEPLOYUSER --hp /home/$DEPLOYUSER
 
 # echo ">>>> Switching to $SUDOUSER to activate pm2"
-# su - $SUDOUSER
+su - $SUDOUSER
 pm2 startup systemd
 
 # pm2 save
