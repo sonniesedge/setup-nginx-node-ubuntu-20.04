@@ -77,6 +77,31 @@ fi
 apt-get -qq update
 apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades -y 
 
+# Setup unattended security upgrades
+cat <<EOT >>/etc/apt/apt.conf.d/50unattended-upgrades
+Unattended-Upgrade::Allowed-Origins {
+        // "${distro_id}:${distro_codename}";
+        "${distro_id}:${distro_codename}-security";
+        "${distro_id}ESMApps:${distro_codename}-apps-security";
+        "${distro_id}ESM:${distro_codename}-infra-security";
+};
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Mail "charlie@sonniesedge.co.uk";
+Unattended-Upgrade::MailReport "always";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::Automatic-Reboot "true";
+EOT
+
+
+cat <<EOT >>/etc/apt/apt.conf.d/20auto-upgrades
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::AutocleanInterval "7";
+APT::Periodic::Unattended-Upgrade "1";
+EOT
+
+
+
 # ----------------
 # CONFIGURE NGINX
 # ----------------
