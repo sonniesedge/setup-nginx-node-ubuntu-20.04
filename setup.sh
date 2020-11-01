@@ -21,9 +21,6 @@ echo "DOMAINALIASES_SPACE_SEPARATED: $DOMAINALIASES_SPACE_SEPARATED"
 echo "DEPLOYUSER: $DEPLOYUSER"
 echo "SUDOUSER: $SUDOUSER"
 
-apt-get -qq update
-apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades -y 
-
 # -------------------------------
 # CREATE USERS AND CONFIGURE SSH
 # -------------------------------
@@ -49,6 +46,7 @@ echo ">>>> Creating $SUDOUSER"
 # TODO: supply encrypted password for this user
 # adduser --gecos "" --disabled-password $SUDOUSER
 useradd -m $SUDOUSER -p '$1$cPANTVBa$766MM8lsGv/W3MeLRoWrj0' -s /bin/bash 
+usermod -aG sudo $SUDOUSER
 mkdir -p /home/$SUDOUSER/.ssh
 touch /home/$SUDOUSER/.ssh/authorized_keys
 chown -R $SUDOUSER:$SUDOUSER /home/$SUDOUSER/.ssh
@@ -75,6 +73,9 @@ if [ $? ] >0; then
   sed -i -e 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
   sed -i -e 's/PermitRootLogin without-password/PermitRootLogin no/g' /etc/ssh/sshd_config
 fi
+
+apt-get -qq update
+apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades -y 
 
 # ----------------
 # CONFIGURE NGINX
