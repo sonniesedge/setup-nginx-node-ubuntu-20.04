@@ -108,7 +108,9 @@ apt-get -qq update
 # log "Installing mailutils"
 # apt-get install mailutils -y 2>> $SETUPLOG
 
-apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils
+debconf-set-selections <<< "postfix postfix/mailname string $DOMAINNAME"
+debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
+apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils -y
 
 # Setup unattended security upgrades
 log "Setting up unattended upgrades"
@@ -259,16 +261,16 @@ nginx -t
 log "Restarting nginx"
 systemctl restart nginx
 
-# Activate Certbot for this server block
-log "Adding certbot LetsEncrypt certificate"
-certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED  --redirect --agree-tos -m charlie@sonniesedge.co.uk
+# # Activate Certbot for this server block
+# log "Adding certbot LetsEncrypt certificate"
+# certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED  --redirect --agree-tos -m charlie@sonniesedge.co.uk
 
-# Renew certbot certificates automatically
-log "Adding auto-renew for certbot"
-systemctl status certbot.timer
+# # Renew certbot certificates automatically
+# log "Adding auto-renew for certbot"
+# systemctl status certbot.timer
 
-log "Restarting nginx"
-systemctl restart nginx
+# log "Restarting nginx"
+# systemctl restart nginx
 
 
 
@@ -285,45 +287,45 @@ echo "$HOSTNAME" >> /etc/hostname
 echo "$DOMAINNAME" >> /etc/mailname
 
 cat <<EOT > /etc/postfix/main.cf
-  # See /usr/share/postfix/main.cf.dist for a commented, more complete version
-  myorigin = /etc/mailname
+    # See /usr/share/postfix/main.cf.dist for a commented, more complete version
+    myorigin = /etc/mailname
 
-  smtpd_banner = \$myhostname ESMTP $mail_name (Ubuntu)
-  biff = no
+    smtpd_banner = \$myhostname ESMTP $mail_name (Ubuntu)
+    biff = no
 
-  # appending .domain is the MUA's job.
-  append_dot_mydomain = no
+    # appending .domain is the MUA's job.
+    append_dot_mydomain = no
 
-  # Uncomment the next line to generate "delayed mail" warnings
-  #delay_warning_time = 4h
+    # Uncomment the next line to generate "delayed mail" warnings
+    #delay_warning_time = 4h
 
-  readme_directory = no
+    readme_directory = no
 
-  # See http://www.postfix.org/COMPATIBILITY_README.html -- default to 2 on
-  # fresh installs.
-  compatibility_level = 2
+    # See http://www.postfix.org/COMPATIBILITY_README.html -- default to 2 on
+    # fresh installs.
+    compatibility_level = 2
 
-  # TLS parameters
-  smtpd_tls_cert_file=/etc/letsencrypt/live/$DOMAINNAME/fullchain.pem
-  smtpd_tls_key_file=/etc/letsencrypt/live/$DOMAINNAME/privkey.pem
-  smtpd_tls_security_level=may
+    # TLS parameters
+    #   smtpd_tls_cert_file=/etc/letsencrypt/live/$DOMAINNAME/fullchain.pem
+    #   smtpd_tls_key_file=/etc/letsencrypt/live/$DOMAINNAME/privkey.pem
+    smtpd_tls_security_level=may
 
-  smtp_tls_CApath=/etc/ssl/certs
-  smtp_tls_security_level=may
-  smtp_tls_session_cache_database = btree:\${data_directory}/smtp_scache
+    smtp_tls_CApath=/etc/ssl/certs
+    smtp_tls_security_level=may
+    smtp_tls_session_cache_database = btree:\${data_directory}/smtp_scache
 
 
-  smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
-  myhostname = /etc/hostname
-  alias_maps = hash:/etc/aliases
-  alias_database = hash:/etc/aliases
-  mydestination = localhost.\$mydomain, localhost, \$myhostname
-  relayhost =
-  mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
-  mailbox_size_limit = 0
-  recipient_delimiter = +
-  inet_interfaces = loopback-only
-  inet_protocols = all
+    smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
+    myhostname = /etc/hostname
+    alias_maps = hash:/etc/aliases
+    alias_database = hash:/etc/aliases
+    mydestination = localhost.\$mydomain, localhost, \$myhostname
+    relayhost =
+    mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+    mailbox_size_limit = 0
+    recipient_delimiter = +
+    inet_interfaces = loopback-only
+    inet_protocols = all
 EOT
 
 # Restart Postfix
