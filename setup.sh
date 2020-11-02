@@ -75,9 +75,11 @@ if [ $? ] >0; then
 fi
 
 apt-get -qq update
-apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades -y 
+apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils -y 
 
 # Setup unattended security upgrades
+echo ">>>> Setting up unattended upgrades"
+
 cat <<EOT >>/etc/apt/apt.conf.d/50unattended-upgrades
 Unattended-Upgrade::Allowed-Origins {
         // "${distro_id}:${distro_codename}";
@@ -249,7 +251,7 @@ npm install pm2@latest -g
 
 env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $DEPLOYUSER --hp /home/$DEPLOYUSER
 
-# echo ">>>> Switching to $SUDOUSER to activate pm2"
+echo ">>>> Switching to $SUDOUSER to activate pm2"
 su - $SUDOUSER
 pm2 startup systemd
 
