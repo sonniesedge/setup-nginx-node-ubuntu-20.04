@@ -29,7 +29,7 @@ echo "SUDOUSER: $SUDOUSER"
 # https://askubuntu.com/questions/94060/run-adduser-non-interactively
 
 # Deploy user
-echo ">>>> Creating $DEPLOYUSER"
+wall ">>>> Creating $DEPLOYUSER"
 adduser --gecos "" --disabled-password $DEPLOYUSER
 # --gecos is for skipping the "Full name,Room number,Work phone,Home phone" stuff when creating a new user
 # https://en.wikipedia.org/wiki/Gecos_field for the history buffs
@@ -44,7 +44,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyJ7K96iFzBFADuS71quXKmcoguMhypW8GiEwQ8e16
 EOT
 
 # Sudo user
-echo ">>>> Creating $SUDOUSER"
+wall ">>>> Creating $SUDOUSER"
 # TODO: supply encrypted password for this user
 # adduser --gecos "" --disabled-password $SUDOUSER
 useradd -m $SUDOUSER -p '$1$cPANTVBa$766MM8lsGv/W3MeLRoWrj0' -s /bin/bash 
@@ -60,7 +60,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC1SuXSEyv07abIrcbkw/U7uhgJdTsIffiG7XOLIgEL
 EOT
 
 # Ensure SSH password logins are disabled
-echo ">>>> Disabling SSH password logins"
+wall ">>>> Disabling SSH password logins"
 grep -q 'PasswordAuthentication no' /etc/ssh/sshd_config 2>/dev/null
 echo $?
 if [ $? ] >0; then
@@ -68,7 +68,7 @@ if [ $? ] >0; then
 fi
 
 # Disable SSH root login
-echo ">>>> Disabling SSH root login"
+wall ">>>> Disabling SSH root login"
 grep -q 'PermitRootLogin no' /etc/ssh/sshd_config 2>/dev/null
 echo $?
 if [ $? ] >0; then
@@ -80,7 +80,7 @@ apt-get -qq update
 apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils -y 
 
 # Setup unattended security upgrades
-echo ">>>> Setting up unattended upgrades"
+wall ">>>> Setting up unattended upgrades"
 
 cat <<EOT >>/etc/apt/apt.conf.d/50unattended-upgrades
 Unattended-Upgrade::Allowed-Origins {
@@ -112,7 +112,7 @@ EOT
 # https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 
 # Allow access through firewall for Nginx
-echo ">>>> Allowing nginx through firewall"
+wall ">>>> Allowing nginx through firewall"
 ufw allow 'Nginx Full'
 
 # Make sure our lovely user owns it all
@@ -124,7 +124,7 @@ chown -R $DEPLOYUSER:$DEPLOYUSER /var/www/$DOMAINNAME
 chmod -R 755 /var/www/$DOMAINNAME
 
 ## Add a server block for the site
-echo ">>>> Adding nginx server block for $DOMAINNAME"
+wall ">>>> Adding nginx server block for $DOMAINNAME"
 tee -a /etc/nginx/sites-available/$DOMAINNAME >/dev/null <<EOT
 server {
     listen 80;
@@ -216,7 +216,7 @@ server {
 EOT
 
 # Active the server block
-echo ">>>> Activating server block"
+wall ">>>> Activating server block"
 ln -s /etc/nginx/sites-available/$DOMAINNAME /etc/nginx/sites-enabled/
 
 # https://gist.github.com/muhammadghazali/6c2b8c80d5528e3118613746e0041263
@@ -225,18 +225,18 @@ ln -s /etc/nginx/sites-available/$DOMAINNAME /etc/nginx/sites-enabled/
 # Config okay with nginx?
 nginx -t
 
-echo ">>>> Restarting nginx"
+wall ">>>> Restarting nginx"
 systemctl restart nginx
 
 # Activate Certbot for this server block
-echo ">>>> Adding certbot LetsEncrypt certificate"
+wall ">>>> Adding certbot LetsEncrypt certificate"
 certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED  --redirect --agree-tos -m charlie@sonniesedge.co.uk
 
 # Renew certbot certificates automatically
-echo ">>>> Adding auto-renew for certbot"
+wall ">>>> Adding auto-renew for certbot"
 systemctl status certbot.timer
 
-echo ">>>> Restarting nginx"
+wall ">>>> Restarting nginx"
 systemctl restart nginx
 
 
@@ -314,7 +314,7 @@ newaliases
 # ------------------------------------
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-20-04
 
-echo ">>>> Installing node"
+wall ">>>> Installing node"
 
 curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
 apt-get install -y nodejs
@@ -323,7 +323,7 @@ npm install pm2@latest -g
 
 env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $DEPLOYUSER --hp /home/$DEPLOYUSER
 
-echo ">>>> Switching to $SUDOUSER to activate pm2"
+wall ">>>> Switching to $SUDOUSER to activate pm2"
 su - $SUDOUSER
 pm2 startup systemd
 
