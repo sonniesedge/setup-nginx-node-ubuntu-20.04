@@ -1,9 +1,12 @@
 #!/bin/bash
 
+
+
 HOSTNAME=whalecoiner
 DOMAINNAME=whalecoiner.com
 DOMAINALIASES=(www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org)
 EMAILADDRESS=charlie@sonniesedge.co.uk
+SETUPLOG=/var/log/serversetup.log
 
 DOMAINALIASES_COMMA_SEPARATED=$(printf '%s,' "${DOMAINALIASES[@]}")
 DOMAINALIASES_COMMA_SEPARATED="${DOMAINALIASES_COMMA_SEPARATED%,}"
@@ -13,15 +16,20 @@ DOMAINALIASES_SPACE_SEPARATED="${DOMAINALIASES_SPACE_SEPARATED% }"
 DEPLOYUSER=deploy
 SUDOUSER=charlie
 
-echo "-------------------------"
-echo "| CONFIG"
-echo "-------------------------"
-echo "DOMAINNAME: $DOMAINNAME"
-echo "DOMAINALIASES: ${DOMAINALIASES[@]}"
-echo "DOMAINALIASES_COMMA_SEPARATED: $DOMAINALIASES_COMMA_SEPARATED"
-echo "DOMAINALIASES_SPACE_SEPARATED: $DOMAINALIASES_SPACE_SEPARATED"
-echo "DEPLOYUSER: $DEPLOYUSER"
-echo "SUDOUSER: $SUDOUSER"
+log ()
+{
+echo "Log message: $1" >> $SETUPLOG
+}
+
+log "-------------------------"
+log "| CONFIG"
+log "-------------------------"
+log "DOMAINNAME: $DOMAINNAME"
+log "DOMAINALIASES: ${DOMAINALIASES[@]}"
+log "DOMAINALIASES_COMMA_SEPARATED: $DOMAINALIASES_COMMA_SEPARATED"
+log "DOMAINALIASES_SPACE_SEPARATED: $DOMAINALIASES_SPACE_SEPARATED"
+log "DEPLOYUSER: $DEPLOYUSER"
+log "SUDOUSER: $SUDOUSER"
 
 # -------------------------------
 # CREATE USERS AND CONFIGURE SSH
@@ -29,7 +37,8 @@ echo "SUDOUSER: $SUDOUSER"
 # https://askubuntu.com/questions/94060/run-adduser-non-interactively
 
 # Deploy user
-wall ">>>> Creating $DEPLOYUSER" -n
+log "Creating $DEPLOYUSER"
+
 adduser --gecos "" --disabled-password $DEPLOYUSER
 # --gecos is for skipping the "Full name,Room number,Work phone,Home phone" stuff when creating a new user
 # https://en.wikipedia.org/wiki/Gecos_field for the history buffs
@@ -39,12 +48,17 @@ chown -R $DEPLOYUSER:$DEPLOYUSER /home/$DEPLOYUSER/.ssh
 chmod 700 /home/$DEPLOYUSER/.ssh
 chmod 644 /home/$DEPLOYUSER/.ssh/authorized_keys
 
+cat <<EOT >> /etc/sshd_config
+ClientAliveInterval 120
+ClientAliveCountMax 720
+EOT
+
 cat <<EOT >>/home/$DEPLOYUSER/.ssh/authorized_keys
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyJ7K96iFzBFADuS71quXKmcoguMhypW8GiEwQ8e16limTbFpQOxl6aGnlHBqjk3FrwtR8k5t3L3e+HzFbF+wpQEjAUHJn8AshJBrQYzT7mFlMx2fUhUU1H6KxrcEwK1TGsUjxWQn2+fLRL0ZAl5zwSfqAVMIQhZcE/7ADZkaShZMfFDFmW3Gtqp+UCCBHfFcGKIQy+fvJguNds67MuRh2fJwxEu0E7iv74wG2O937oUPSUxP36azGJ7l3nZz2smKogVhpiOlKfXm6PoBeqleTRhfw+aoWoZ5LUWeLkr+4gB59p8XsfyJJoW9CtP6MZMtjOlxv/7GYRWlv+bekVM2fF1ek/Csw0EjtgjlQohaWhW4EklnJ5fNtR0NVMR4L9Bn2ll73mbwf+/4Rx/CD+pffdYV0YTws7M/z32qbUc+IHOSbHGeFhnNCMbk8I4rLgm7/sNvtb3uF7S9Y8Ewe012LvCSCPwrVuHMobKGbJt2F7ZeOlk3Uf+oG0iRTEU7Ngmq8EofrMubhSFUjcC4KzhlUSu/fniAsFJPk2zVyPtU205NwdyWEY7+RCyvwwHHV0yMuhbBc99eUUKpBQI94PaZfAicCsLQSVN9ldQ5vvh7CKJrUJRfq2yCmmRG0EhmSjpB8YUcgT9RdM7kD+76BG0MLMv4ThDNnuCLSnMHnTjMP7w==
 EOT
 
 # Sudo user
-wall ">>>> Creating $SUDOUSER" -n
+log "Creating $SUDOUSER" >> $SETUPLOG
 # TODO: supply encrypted password for this user
 # adduser --gecos "" --disabled-password $SUDOUSER
 useradd -m $SUDOUSER -p '$1$cPANTVBa$766MM8lsGv/W3MeLRoWrj0' -s /bin/bash 
@@ -60,7 +74,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC1SuXSEyv07abIrcbkw/U7uhgJdTsIffiG7XOLIgEL
 EOT
 
 # Ensure SSH password logins are disabled
-wall ">>>> Disabling SSH password logins" -n
+log "Disabling SSH password logins"
 grep -q 'PasswordAuthentication no' /etc/ssh/sshd_config 2>/dev/null
 echo $?
 if [ $? ] >0; then
@@ -68,7 +82,7 @@ if [ $? ] >0; then
 fi
 
 # Disable SSH root login
-wall ">>>> Disabling SSH root login" -n
+log "Disabling SSH root login"
 grep -q 'PermitRootLogin no' /etc/ssh/sshd_config 2>/dev/null
 echo $?
 if [ $? ] >0; then
@@ -76,14 +90,14 @@ if [ $? ] >0; then
   sed -i -e 's/PermitRootLogin without-password/PermitRootLogin no/g' /etc/ssh/sshd_config
 fi
 
-wall ">>>> Updating local apt data" -n
+log "Updating local apt data"
 apt-get -qq update
 
-wall ">>>> Installing apt packages" -n
+log "Installing apt packages"
 apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils -y 
 
 # Setup unattended security upgrades
-wall ">>>> Setting up unattended upgrades" -n
+log "Setting up unattended upgrades"
 
 cat <<EOT > /etc/apt/apt.conf.d/50unattended-upgrades
 Unattended-Upgrade::Allowed-Origins {
@@ -115,11 +129,11 @@ EOT
 # https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 
 # Allow access through firewall for Nginx
-wall ">>>> Allowing nginx through firewall" -n
+log "Allowing nginx through firewall"
 ufw allow 'Nginx Full'
 
 # Make sure our lovely user owns it all
-echo ">>>> Creating app directories" -n
+log "Creating app directories"
 mkdir -p /var/www/$DOMAINNAME/public
 mkdir -p /var/www/$DOMAINNAME/content
 mkdir -p /var/www/$DOMAINNAME/data
@@ -127,7 +141,7 @@ chown -R $DEPLOYUSER:$DEPLOYUSER /var/www/$DOMAINNAME
 chmod -R 755 /var/www/$DOMAINNAME
 
 ## Add a server block for the site
-wall ">>>> Adding nginx server block for $DOMAINNAME" -n
+log "Adding nginx server block for $DOMAINNAME"
 tee -a /etc/nginx/sites-available/$DOMAINNAME >/dev/null <<EOT
 server {
     listen 80;
@@ -219,7 +233,7 @@ server {
 EOT
 
 # Active the server block
-wall ">>>> Activating server block" -n
+log "Activating server block"
 ln -s /etc/nginx/sites-available/$DOMAINNAME /etc/nginx/sites-enabled/
 
 # https://gist.github.com/muhammadghazali/6c2b8c80d5528e3118613746e0041263
@@ -228,18 +242,18 @@ ln -s /etc/nginx/sites-available/$DOMAINNAME /etc/nginx/sites-enabled/
 # Config okay with nginx?
 nginx -t
 
-wall ">>>> Restarting nginx" -n
+log "Restarting nginx"
 systemctl restart nginx
 
 # Activate Certbot for this server block
-wall ">>>> Adding certbot LetsEncrypt certificate" -n
+log "Adding certbot LetsEncrypt certificate"
 certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED  --redirect --agree-tos -m charlie@sonniesedge.co.uk
 
 # Renew certbot certificates automatically
-wall ">>>> Adding auto-renew for certbot" -n
+log "Adding auto-renew for certbot"
 systemctl status certbot.timer
 
-wall ">>>> Restarting nginx" -n
+log "Restarting nginx"
 systemctl restart nginx
 
 
@@ -257,45 +271,45 @@ echo "$HOSTNAME" >> /etc/hostname
 echo "$DOMAINNAME" >> /etc/mailname
 
 cat <<EOT > /etc/postfix/main.cf
-# See /usr/share/postfix/main.cf.dist for a commented, more complete version
-myorigin = /etc/mailname
+  # See /usr/share/postfix/main.cf.dist for a commented, more complete version
+  myorigin = /etc/mailname
 
-smtpd_banner = \$myhostname ESMTP $mail_name (Ubuntu)
-biff = no
+  smtpd_banner = \$myhostname ESMTP $mail_name (Ubuntu)
+  biff = no
 
-# appending .domain is the MUA's job.
-append_dot_mydomain = no
+  # appending .domain is the MUA's job.
+  append_dot_mydomain = no
 
-# Uncomment the next line to generate "delayed mail" warnings
-#delay_warning_time = 4h
+  # Uncomment the next line to generate "delayed mail" warnings
+  #delay_warning_time = 4h
 
-readme_directory = no
+  readme_directory = no
 
-# See http://www.postfix.org/COMPATIBILITY_README.html -- default to 2 on
-# fresh installs.
-compatibility_level = 2
+  # See http://www.postfix.org/COMPATIBILITY_README.html -- default to 2 on
+  # fresh installs.
+  compatibility_level = 2
 
-# TLS parameters
-smtpd_tls_cert_file=/etc/letsencrypt/live/$DOMAINNAME/fullchain.pem
-smtpd_tls_key_file=/etc/letsencrypt/live/$DOMAINNAME/privkey.pem
-smtpd_tls_security_level=may
+  # TLS parameters
+  smtpd_tls_cert_file=/etc/letsencrypt/live/$DOMAINNAME/fullchain.pem
+  smtpd_tls_key_file=/etc/letsencrypt/live/$DOMAINNAME/privkey.pem
+  smtpd_tls_security_level=may
 
-smtp_tls_CApath=/etc/ssl/certs
-smtp_tls_security_level=may
-smtp_tls_session_cache_database = btree:\${data_directory}/smtp_scache
+  smtp_tls_CApath=/etc/ssl/certs
+  smtp_tls_security_level=may
+  smtp_tls_session_cache_database = btree:\${data_directory}/smtp_scache
 
 
-smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
-myhostname = /etc/hostname
-alias_maps = hash:/etc/aliases
-alias_database = hash:/etc/aliases
-mydestination = localhost.\$mydomain, localhost, \$myhostname
-relayhost =
-mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
-mailbox_size_limit = 0
-recipient_delimiter = +
-inet_interfaces = loopback-only
-inet_protocols = all
+  smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
+  myhostname = /etc/hostname
+  alias_maps = hash:/etc/aliases
+  alias_database = hash:/etc/aliases
+  mydestination = localhost.\$mydomain, localhost, \$myhostname
+  relayhost =
+  mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+  mailbox_size_limit = 0
+  recipient_delimiter = +
+  inet_interfaces = loopback-only
+  inet_protocols = all
 EOT
 
 # Restart Postfix
@@ -317,7 +331,7 @@ newaliases
 # ------------------------------------
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-20-04
 
-wall ">>>> Installing node" -n
+log "Installing node"
 
 curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
 apt-get install -y nodejs
@@ -326,7 +340,7 @@ npm install pm2@latest -g
 
 env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $DEPLOYUSER --hp /home/$DEPLOYUSER
 
-wall ">>>> Switching to $SUDOUSER to activate pm2" -n
+log "Switching to $SUDOUSER to activate pm2"
 su - $SUDOUSER
 pm2 startup systemd
 
