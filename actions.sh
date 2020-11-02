@@ -284,7 +284,6 @@ systemctl restart nginx
 echo "$(curl http://169.254.169.254/metadata/v1/interfaces/public/0/ipv4/address) $DOMAINNAME $HOSTNAME" >> /etc/hosts
 
 echo "$HOSTNAME" >> /etc/hostname
-echo "$DOMAINNAME" >> /etc/mailname
 
 cat <<EOT > /etc/postfix/main.cf
 # See /usr/share/postfix/main.cf.dist for a commented, more complete version
