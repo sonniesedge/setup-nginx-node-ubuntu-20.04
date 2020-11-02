@@ -76,7 +76,10 @@ if [ $? ] >0; then
   sed -i -e 's/PermitRootLogin without-password/PermitRootLogin no/g' /etc/ssh/sshd_config
 fi
 
+wall ">>>> Updating local apt data" -n
 apt-get -qq update
+
+wall ">>>> Installing apt packages" -n
 apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils -y 
 
 # Setup unattended security upgrades
