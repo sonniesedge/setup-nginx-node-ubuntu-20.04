@@ -91,23 +91,6 @@ fi
 log "Updating local apt data"
 apt-get -qq update
 
-# log "Installing nginx"
-# apt-get install nginx  -y 2>> $SETUPLOG
-# log "Installing certbot"
-# apt-get install certbot  -y 2>> $SETUPLOG
-# log "Installing python3-certbot-nginx"
-# apt-get install python3-certbot-nginx  -y 2>> $SETUPLOG
-# log "Installing build-essential"
-# apt-get install build-essential  -y 2>> $SETUPLOG
-# log "Installing libssl-dev"
-# apt-get install libssl-dev  -y 2>> $SETUPLOG
-# log "Installing whois"
-# apt-get install whois  -y 2>> $SETUPLOG
-# log "Installing unattended-upgrades"
-# apt-get install unattended-upgrades  -y 2>> $SETUPLOG
-# log "Installing mailutils"
-# apt-get install mailutils -y 2>> $SETUPLOG
-
 debconf-set-selections <<< "postfix postfix/mailname string $DOMAINNAME"
 debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
 apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils -y
