@@ -1,7 +1,9 @@
 #!/bin/bash
 
+HOSTNAME=whalecoiner
 DOMAINNAME=whalecoiner.com
 DOMAINALIASES=(www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org)
+EMAILADDRESS=charlie@sonniesedge.co.uk
 
 DOMAINALIASES_COMMA_SEPARATED=$(printf '%s,' "${DOMAINALIASES[@]}")
 DOMAINALIASES_COMMA_SEPARATED="${DOMAINALIASES_COMMA_SEPARATED%,}"
@@ -83,12 +85,12 @@ echo ">>>> Setting up unattended upgrades"
 cat <<EOT >>/etc/apt/apt.conf.d/50unattended-upgrades
 Unattended-Upgrade::Allowed-Origins {
         // "${distro_id}:${distro_codename}";
-        "${distro_id}:${distro_codename}-security";
-        "${distro_id}ESMApps:${distro_codename}-apps-security";
-        "${distro_id}ESM:${distro_codename}-infra-security";
+        "\${distro_id}:${distro_codename}-security";
+        "\${distro_id}ESMApps:${distro_codename}-apps-security";
+        "\${distro_id}ESM:${distro_codename}-infra-security";
 };
 Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
-Unattended-Upgrade::Mail "charlie@sonniesedge.co.uk";
+Unattended-Upgrade::Mail "$EMAILADDRESS";
 Unattended-Upgrade::MailReport "always";
 Unattended-Upgrade::Remove-Unused-Dependencies "true";
 Unattended-Upgrade::Automatic-Reboot "true";
@@ -237,6 +239,76 @@ systemctl status certbot.timer
 echo ">>>> Restarting nginx"
 systemctl restart nginx
 
+
+
+
+# ------------------------------------
+# SETUP EMAIL 
+# ------------------------------------
+# https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-postfix-as-a-send-only-smtp-server-on-ubuntu-20-04
+
+# Use DigitalOcean droplet API to get the real public IP address
+echo "$(curl http://169.254.169.254/metadata/v1/interfaces/public/0/ipv4/address) $DOMAINNAME $HOSTNAME" >> /etc/hosts
+
+echo "$HOSTNAME" >> /etc/hostname
+echo "$DOMAINNAME" >> /etc/mailname
+
+cat <<EOT >> /etc/postfix/main.cf
+# See /usr/share/postfix/main.cf.dist for a commented, more complete version
+myorigin = /etc/mailname
+
+smtpd_banner = \$myhostname ESMTP $mail_name (Ubuntu)
+biff = no
+
+# appending .domain is the MUA's job.
+append_dot_mydomain = no
+
+# Uncomment the next line to generate "delayed mail" warnings
+#delay_warning_time = 4h
+
+readme_directory = no
+
+# See http://www.postfix.org/COMPATIBILITY_README.html -- default to 2 on
+# fresh installs.
+compatibility_level = 2
+
+# TLS parameters
+smtpd_tls_cert_file=/etc/letsencrypt/live/$DOMAINNAME/fullchain.pem
+smtpd_tls_key_file=/etc/letsencrypt/live/$DOMAINNAME/privkey.pem
+smtpd_tls_security_level=may
+
+smtp_tls_CApath=/etc/ssl/certs
+smtp_tls_security_level=may
+smtp_tls_session_cache_database = btree:\${data_directory}/smtp_scache
+
+
+smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
+myhostname = /etc/hostname
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+mydestination = localhost.\$mydomain, localhost, \$myhostname
+relayhost =
+mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = loopback-only
+inet_protocols = all
+EOT
+
+# Restart Postfix
+systemctl restart postfix
+
+# Forward all root email to $EMAILADDRESS
+echo "postmaster: $EMAILADDRESS" >> /etc/aliases
+newaliases
+
+
+
+
+
+
+
+
 # ------------------------------------
 # INSTALL NODE AND PM2, AND CONFIGURE
 # ------------------------------------
@@ -254,5 +326,7 @@ env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $DE
 echo ">>>> Switching to $SUDOUSER to activate pm2"
 su - $SUDOUSER
 pm2 startup systemd
+
+echo "Just to let you know that the Droplet was destroyed and rebuilt using the build script." | mail -s "Rebuild alert" $EMAILADDRESS
 
 # pm2 save
