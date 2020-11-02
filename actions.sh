@@ -117,10 +117,10 @@ log "Setting up unattended upgrades"
 
 cat <<EOT > /etc/apt/apt.conf.d/50unattended-upgrades
 Unattended-Upgrade::Allowed-Origins {
-        // "${distro_id}:${distro_codename}";
-        "${distro_id}:${distro_codename}-security";
-        "${distro_id}ESMApps:${distro_codename}-apps-security";
-        "${distro_id}ESM:${distro_codename}-infra-security";
+        // "\${distro_id}:\${distro_codename}";
+        "\${distro_id}:\${distro_codename}-security";
+        "\${distro_id}ESMApps:\${distro_codename}-apps-security";
+        "\${distro_id}ESM:\${distro_codename}-infra-security";
 };
 Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
 Unattended-Upgrade::Mail "$EMAILADDRESS";
