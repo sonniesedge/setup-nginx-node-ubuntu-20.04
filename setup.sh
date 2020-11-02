@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 HOSTNAME=whalecoiner
 DOMAINNAME=whalecoiner.com
 DOMAINALIASES=(www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org)
@@ -18,7 +16,7 @@ SUDOUSER=charlie
 
 log ()
 {
-echo "Log message: $1" >> $SETUPLOG
+echo "$(date "+%m%d%Y %T"): $1" >> $SETUPLOG
 }
 
 log "-------------------------"
@@ -94,7 +92,7 @@ log "Updating local apt data"
 apt-get -qq update
 
 log "Installing apt packages"
-apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils -y 
+apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils -y 2>> $SETUPLOG
 
 # Setup unattended security upgrades
 log "Setting up unattended upgrades"
