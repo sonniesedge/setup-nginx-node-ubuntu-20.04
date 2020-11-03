@@ -2,7 +2,7 @@
 
 HOSTNAME=whalecoiner
 DOMAINNAME=whalecoiner.com
-DOMAINALIASES=(www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org)
+DOMAINALIASES=(www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org timidra.in)
 EMAILADDRESS=charlie@sonniesedge.co.uk
 SETUPLOG=/var/log/serversetup.log
 
