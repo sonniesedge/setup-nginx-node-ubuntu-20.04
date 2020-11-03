@@ -244,9 +244,9 @@ nginx -t
 log "Restarting nginx"
 systemctl restart nginx
 
-# # Activate Certbot for this server block
-# log "Adding certbot LetsEncrypt certificate"
-# certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED  --redirect --agree-tos -m charlie@sonniesedge.co.uk
+# Activate Certbot for this server block
+log "Adding certbot LetsEncrypt certificate (dry run)"
+certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED --redirect --agree-tos -m charlie@sonniesedge.co.uk --dry-run
 
 # # Renew certbot certificates automatically
 # log "Adding auto-renew for certbot"
