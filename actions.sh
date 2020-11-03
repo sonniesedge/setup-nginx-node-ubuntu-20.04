@@ -88,12 +88,19 @@ if [ $? ] >0; then
   sed -i -e 's/PermitRootLogin without-password/PermitRootLogin no/g' /etc/ssh/sshd_config
 fi
 
-log "Updating local apt data"
-apt-get -qq update
+# TODO: nodesource does an update itself
+# log "Updating local apt data"
+# apt-get -qq update
 
+# Setup these values before installing mailutils/postfix so that unattended install can occur
 debconf-set-selections <<< "postfix postfix/mailname string $DOMAINNAME"
 debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
-apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils -y
+
+# Add repo for node
+curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+
+# Do a big install of all needed things
+apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils nodejs -y
 
 # Setup unattended security upgrades
 log "Setting up unattended upgrades"
@@ -112,15 +119,12 @@ Unattended-Upgrade::Remove-Unused-Dependencies "true";
 Unattended-Upgrade::Automatic-Reboot "true";
 EOT
 
-
 cat <<EOT > /etc/apt/apt.conf.d/20auto-upgrades
 APT::Periodic::Update-Package-Lists "1";
 APT::Periodic::Download-Upgradeable-Packages "1";
 APT::Periodic::AutocleanInterval "7";
 APT::Periodic::Unattended-Upgrade "1";
 EOT
-
-
 
 # ----------------
 # CONFIGURE NGINX
@@ -257,7 +261,6 @@ certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED --redirect --
 
 
 
-
 # ------------------------------------
 # SETUP EMAIL 
 # ------------------------------------
@@ -325,10 +328,7 @@ systemctl restart postfix
 # ------------------------------------
 # https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-20-04
 
-log "Installing node"
-
-curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-apt-get install -y nodejs
+log "Setting up PM2 node"
 
 npm install pm2@latest -g
 
