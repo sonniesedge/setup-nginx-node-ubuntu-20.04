@@ -309,15 +309,12 @@ inet_interfaces = loopback-only
 inet_protocols = all
 EOT
 
-# Restart Postfix
-systemctl restart postfix
-
 # Forward all root email to $EMAILADDRESS
-echo "postmaster: $EMAILADDRESS" > /etc/aliases
+echo "postmaster: $EMAILADDRESS" >> /etc/aliases
 newaliases
 
-
-
+# Restart Postfix
+systemctl restart postfix
 
 
 
