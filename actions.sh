@@ -89,15 +89,20 @@ if [ $? ] >0; then
 fi
 
 # TODO: nodesource does an update itself
-# log "Updating local apt data"
-# apt-get -qq update
+
+log "Add the node repo"
+curl -sSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo apt-key add -
+VERSION=node_14.x
+DISTRO="$(lsb_release -s -c)" # Get the ubuntu distribution name
+echo "deb https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+echo "deb-src https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee -a /etc/apt/sources.list.d/nodesource.list
+
+log "Updating local apt data"
+apt-get -q update
 
 # Setup these values before installing mailutils/postfix so that unattended install can occur
 debconf-set-selections <<< "postfix postfix/mailname string $DOMAINNAME"
 debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
-
-# Add repo for node
-curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
 
 # Do a big install of all needed things
 apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils nodejs -y
