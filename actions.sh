@@ -1,22 +1,21 @@
 #!/bin/bash
-
+# ------------------------------------------------------------
 HOSTNAME=whalecoiner
 DOMAINNAME=whalecoiner.com
 DOMAINALIASES=(www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org timidra.in)
 EMAILADDRESS=charlie@sonniesedge.co.uk
-SETUPLOG=/var/log/serversetup.log
-
+LOG=/var/log/serversetup.log
 DOMAINALIASES_COMMA_SEPARATED=$(printf '%s,' "${DOMAINALIASES[@]}")
 DOMAINALIASES_COMMA_SEPARATED="${DOMAINALIASES_COMMA_SEPARATED%,}"
 DOMAINALIASES_SPACE_SEPARATED=$(printf '%s ' "${DOMAINALIASES[@]}")
 DOMAINALIASES_SPACE_SEPARATED="${DOMAINALIASES_SPACE_SEPARATED% }"
-
 DEPLOYUSER=deploy
 SUDOUSER=charlie
 
+# ------------------------------------------------------------
 log ()
 {
-echo "$(date "+%m%d%Y %T"): $1" >> $SETUPLOG
+  echo "$(date "+%m%d%Y %T"): $1" >> $LOG
 }
 
 log "-------------------------"
@@ -34,9 +33,13 @@ log "SUDOUSER: $SUDOUSER"
 # -------------------------------
 # https://askubuntu.com/questions/94060/run-adduser-non-interactively
 
-# Deploy user
-log "Creating $DEPLOYUSER"
+cat <<EOT >> /etc/sshd_config
+ClientAliveInterval 120
+ClientAliveCountMax 720
+EOT
 
+# ------------------------------------------------------------
+log "Creating $DEPLOYUSER"
 adduser --gecos "" --disabled-password $DEPLOYUSER
 # --gecos is for skipping the "Full name,Room number,Work phone,Home phone" stuff when creating a new user
 # https://en.wikipedia.org/wiki/Gecos_field for the history buffs
@@ -46,19 +49,13 @@ chown -R $DEPLOYUSER:$DEPLOYUSER /home/$DEPLOYUSER/.ssh
 chmod 700 /home/$DEPLOYUSER/.ssh
 chmod 644 /home/$DEPLOYUSER/.ssh/authorized_keys
 
-cat <<EOT >> /etc/sshd_config
-ClientAliveInterval 120
-ClientAliveCountMax 720
-EOT
-
 cat <<EOT >>/home/$DEPLOYUSER/.ssh/authorized_keys
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyJ7K96iFzBFADuS71quXKmcoguMhypW8GiEwQ8e16limTbFpQOxl6aGnlHBqjk3FrwtR8k5t3L3e+HzFbF+wpQEjAUHJn8AshJBrQYzT7mFlMx2fUhUU1H6KxrcEwK1TGsUjxWQn2+fLRL0ZAl5zwSfqAVMIQhZcE/7ADZkaShZMfFDFmW3Gtqp+UCCBHfFcGKIQy+fvJguNds67MuRh2fJwxEu0E7iv74wG2O937oUPSUxP36azGJ7l3nZz2smKogVhpiOlKfXm6PoBeqleTRhfw+aoWoZ5LUWeLkr+4gB59p8XsfyJJoW9CtP6MZMtjOlxv/7GYRWlv+bekVM2fF1ek/Csw0EjtgjlQohaWhW4EklnJ5fNtR0NVMR4L9Bn2ll73mbwf+/4Rx/CD+pffdYV0YTws7M/z32qbUc+IHOSbHGeFhnNCMbk8I4rLgm7/sNvtb3uF7S9Y8Ewe012LvCSCPwrVuHMobKGbJt2F7ZeOlk3Uf+oG0iRTEU7Ngmq8EofrMubhSFUjcC4KzhlUSu/fniAsFJPk2zVyPtU205NwdyWEY7+RCyvwwHHV0yMuhbBc99eUUKpBQI94PaZfAicCsLQSVN9ldQ5vvh7CKJrUJRfq2yCmmRG0EhmSjpB8YUcgT9RdM7kD+76BG0MLMv4ThDNnuCLSnMHnTjMP7w==
 EOT
 
-# Sudo user
-log "Creating $SUDOUSER" >> $SETUPLOG
-# TODO: supply encrypted password for this user
-# adduser --gecos "" --disabled-password $SUDOUSER
+# ------------------------------------------------------------
+log "Creating $SUDOUSER" >> $LOG
+# Using the low-level 'useradd' rather than the high-level 'adduser' as it allows the supplying of an encrypted password
 useradd -m $SUDOUSER -p '$1$cPANTVBa$766MM8lsGv/W3MeLRoWrj0' -s /bin/bash 
 usermod -aG sudo $SUDOUSER
 mkdir -p /home/$SUDOUSER/.ssh
@@ -71,51 +68,53 @@ cat <<EOT >>/home/$SUDOUSER/.ssh/authorized_keys
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC1SuXSEyv07abIrcbkw/U7uhgJdTsIffiG7XOLIgELG6KphYsIlC/lnoq5P0xj9oZ7W28zX+qIkg/PUSMQS3uJpynBS1y43v51Eac6SzhtH56SrAhMDfVJTclMaUAIMnTb0lN/vhD6w6bsz95AoWwInHja/4J3a1aso0qWwdyrLFZ8Y5vDLokn27EdKuqZAPfzk3VIF+zh1OXnnP3XeeTsAqzVOPdzTc1XlAEokgnmizjgIuXOn6yIMAct24r6TIgwQPBMPjP5pN7gtwY1StZXk62N6s1pm7obXLaJYeHGIHNhKbz3YW9hy23hbBOPA4WD406rICIg2NxF7GXccBAo9V46glpncWtTnBbpmItXXJ842gW+NpuHks2mn3evVFw70KRO2z2H/YmZoCBFXzxNbPquaZPaT7i+u8JrUSQz8Sn3XVgmXSzDIqraJxQtKVKx95MyLd1UTwcMeMf4zmsnfdgBjhIIGS3k8B9QlZxDbYhmhL+/FW14gG7zU7lze0lrgXqbH+5LBHyfyg98GzJKOGj9a6b3bvbAJcSl4PxJIpEISHAh57DkN76UPFT0dloUic2GjJ+sRLr7cdJvoUfCJ5pk7i19jhb8pZM09bG/QEJEkOIFH6ZtkT1miGLZzD5tHt9ORuZlq3aWhP2yRuKsA51gCY+d1KJuj636+LsY9Q==
 EOT
 
-# Ensure SSH password logins are disabled
-log "Disabling SSH password logins"
+# ------------------------------------------------------------
 grep -q 'PasswordAuthentication no' /etc/ssh/sshd_config 2>/dev/null
-echo $?
 if [ $? ] >0; then
+  log "Disabling SSH password logins"
   sed -i -e 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
 fi
 
-# Disable SSH root login
-log "Disabling SSH root login"
+# ------------------------------------------------------------
 grep -q 'PermitRootLogin no' /etc/ssh/sshd_config 2>/dev/null
-echo $?
 if [ $? ] >0; then
+  log "Disabling SSH root login"
   sed -i -e 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
   sed -i -e 's/PermitRootLogin without-password/PermitRootLogin no/g' /etc/ssh/sshd_config
 fi
 
-# TODO: nodesource does an update itself
-
-log "Add the node repo"
+# ------------------------------------------------------------
+log "Add the node repo to apt..."
 curl -sSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo apt-key add -
-VERSION=node_14.x
+NODEVERSION=node_14.x
 DISTRO="$(lsb_release -s -c)" # Get the ubuntu distribution name
-echo "deb https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-echo "deb-src https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee -a /etc/apt/sources.list.d/nodesource.list
+echo "deb https://deb.nodesource.com/$NODEVERSION $DISTRO main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+echo "deb-src https://deb.nodesource.com/$NODEVERSION $DISTRO main" | sudo tee -a /etc/apt/sources.list.d/nodesource.list
 
-log "Updating local apt data"
+# ------------------------------------------------------------
+log "Updating apt..."
 apt-get -qq update
+if [ $? ] =0; then
+  log "apt updated!"
+fi
 
+# ------------------------------------------------------------
 # Setup these values before installing mailutils/postfix so that unattended install can occur
 debconf-set-selections <<< "postfix postfix/mailname string $DOMAINNAME"
 debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
 
-# Do a big install of all needed things
+# ------------------------------------------------------------
+log "Install all necessary packages"
 apt-get -qq install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils nodejs -y
 
-# Setup unattended security upgrades
+# ------------------------------------------------------------
 log "Setting up unattended upgrades"
-
 cat <<EOT > /etc/apt/apt.conf.d/50unattended-upgrades
 Unattended-Upgrade::Allowed-Origins {
-        // "\${distro_id}:\${distro_codename}";
-        "\${distro_id}:\${distro_codename}-security";
-        "\${distro_id}ESMApps:\${distro_codename}-apps-security";
-        "\${distro_id}ESM:\${distro_codename}-infra-security";
+    // "\${distro_id}:\${distro_codename}";
+    "\${distro_id}:\${distro_codename}-security";
+    "\${distro_id}ESMApps:\${distro_codename}-apps-security";
+    "\${distro_id}ESM:\${distro_codename}-infra-security";
 };
 Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
 Unattended-Upgrade::Mail "$EMAILADDRESS";
@@ -136,11 +135,11 @@ EOT
 # ----------------
 # https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 
-# Allow access through firewall for Nginx
+# ------------------------------------------------------------
 log "Allowing nginx through firewall"
 ufw allow 'Nginx Full'
 
-# Make sure our lovely user owns it all
+# ------------------------------------------------------------
 log "Creating app directories"
 mkdir -p /var/www/$DOMAINNAME/public
 mkdir -p /var/www/$DOMAINNAME/content
@@ -148,95 +147,75 @@ mkdir -p /var/www/$DOMAINNAME/data
 chown -R $DEPLOYUSER:$DEPLOYUSER /var/www/$DOMAINNAME
 chmod -R 755 /var/www/$DOMAINNAME
 
-## Add a server block for the site
+# ------------------------------------------------------------
 log "Adding nginx server block for $DOMAINNAME"
 tee -a /etc/nginx/sites-available/$DOMAINNAME >/dev/null <<EOT
 server {
-    listen 80;
-    listen [::]:80;
+  listen          80;
+  listen          [::]:80;
+  root            /var/www/$DOMAINNAME/public;
+  index           index.html index.htm index.nginx-debian.html;
+  server_name     $DOMAINNAME $DOMAINALIASES_SPACE_SEPARATED;
 
-    root /var/www/$DOMAINNAME/public;
-    index index.html index.htm index.nginx-debian.html;
+  location / {
+    # Proxy all requests to the node app
+    proxy_pass                              http://localhost:3000;
 
-    server_name $DOMAINNAME $DOMAINALIASES_SPACE_SEPARATED;
+    proxy_http_version                      1.1;
+    proxy_cache_bypass                      \$http_upgrade;
 
-    # # ACME-challenge
-    # location ^~ /.well-known/acme-challenge/ {
-    #   root /var/www/_letsencrypt;
-    # }
+    # Proxy headers
+    proxy_set_header Upgrade                \$http_upgrade;
+    proxy_set_header Connection             "upgrade";
+    proxy_set_header Host                   \$host;
+    proxy_set_header X-Real-IP              \$remote_addr;
+    proxy_set_header X-Forwarded-For        \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto      \$scheme;
+    proxy_set_header X-Forwarded-Host       \$host;
+    proxy_set_header X-Forwarded-Port       \$server_port;
 
-    location / {
+    # Proxy timeouts
+    proxy_connect_timeout                   60s;
+    proxy_send_timeout                      60s;
+    proxy_read_timeout                      60s; 
 
-        proxy_pass http://localhost:3000;
+    # security headers
+    add_header X-Frame-Options              "SAMEORIGIN" always;
+    add_header X-XSS-Protection             "1; mode=block" always;
+    add_header X-Content-Type-Options       "nosniff" always;
+    add_header Referrer-Policy              "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy      "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+    add_header Strict-Transport-Security    "max-age=31536000; includeSubDomains; preload" always;
 
-
-        # proxy_set_header HOST $host;
-        # proxy_set_header X-Forwarded-Proto $scheme;
-        # proxy_set_header X-Real-IP $remote_addr;
-        # proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        # proxy_http_version 1.1;
-        
-
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_cache_bypass \$http_upgrade;
-
-        proxy_http_version                 1.1;
-        proxy_cache_bypass                 \$http_upgrade;
-
-        # Proxy headers
-        proxy_set_header Upgrade           \$http_upgrade;
-        proxy_set_header Connection        "upgrade";
-        proxy_set_header Host              \$host;
-        proxy_set_header X-Real-IP         \$remote_addr;
-        proxy_set_header X-Forwarded-For   \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header X-Forwarded-Host  \$host;
-        proxy_set_header X-Forwarded-Port  \$server_port;
-
-        # Proxy timeouts
-        proxy_connect_timeout              60s;
-        proxy_send_timeout                 60s;
-        proxy_read_timeout                 60s; 
-
-        # security headers
-        add_header X-Frame-Options           "SAMEORIGIN" always;
-        add_header X-XSS-Protection          "1; mode=block" always;
-        add_header X-Content-Type-Options    "nosniff" always;
-        add_header Referrer-Policy           "no-referrer-when-downgrade" always;
-        add_header Content-Security-Policy   "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
-        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-
-        # # . files
-        # location ~ /\.(?!well-known) {
-        #     deny all;
-        # }
+    # .files
+    location ~ /\.(?!well-known) {
+        deny            all;
     }
-    
-    # # favicon.ico
+
+    # favicon.ico
     location = /favicon.ico {
-        log_not_found off;
-        access_log    off;
+        log_not_found   off;
+        access_log      off;
     }
 
-    # # robots.txt
+    # robots.txt
     location = /robots.txt {
-        log_not_found off;
-        access_log    off;
+        log_not_found   off;
+        access_log      off;
     }
 
-    # # gzip
-    gzip              on;
-    gzip_vary         on;
-    gzip_proxied      any;
-    gzip_comp_level   6;
-    gzip_types        text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
+    # gzip compression
+    gzip                on;
+    gzip_vary           on;
+    gzip_proxied        any;
+    gzip_comp_level     6;
+    gzip_types          text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
 
-    # # brotli
-    # #brotli            on;
-    # #brotli_comp_level 6;
-    # #brotli_types      text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
+    # brotli compression
+    # brotli            on;
+    # brotli_comp_level 6;
+    # brotli_types      text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
+  }
 }
 EOT
 
