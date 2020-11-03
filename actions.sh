@@ -98,14 +98,14 @@ echo "deb https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee /etc/apt/
 echo "deb-src https://deb.nodesource.com/$VERSION $DISTRO main" | sudo tee -a /etc/apt/sources.list.d/nodesource.list
 
 log "Updating local apt data"
-apt-get -q update
+apt-get -qq update
 
 # Setup these values before installing mailutils/postfix so that unattended install can occur
 debconf-set-selections <<< "postfix postfix/mailname string $DOMAINNAME"
 debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
 
 # Do a big install of all needed things
-apt-get install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils nodejs -y
+apt-get -qq install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils nodejs -y
 
 # Setup unattended security upgrades
 log "Setting up unattended upgrades"
