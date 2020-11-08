@@ -92,11 +92,11 @@ echo "deb https://deb.nodesource.com/$NODEVERSION $DISTRO main" | sudo tee /etc/
 echo "deb-src https://deb.nodesource.com/$NODEVERSION $DISTRO main" | sudo tee -a /etc/apt/sources.list.d/nodesource.list
 
 # ------------------------------------------------------------
-log "Updating apt..."
-apt-get -qq update
-if [ $? = 0 ];  then
-  log "apt updated!"
-fi
+# log "Updating apt..."
+# apt-get -qq update
+# if [ $? = 0 ];  then
+#   log "apt updated!"
+# fi
 
 # ------------------------------------------------------------
 # Setup these values before installing mailutils/postfix so that unattended install can occur
