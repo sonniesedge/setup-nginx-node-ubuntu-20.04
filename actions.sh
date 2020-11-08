@@ -105,7 +105,12 @@ debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Si
 
 # ------------------------------------------------------------
 log "Install all necessary packages"
-apt-get -qq install nginx certbot python3-certbot-nginx build-essential libssl-dev whois unattended-upgrades mailutils nodejs -y
+apt-get -qqy install \
+  nginx certbot python3-certbot-nginx \
+  brotli nginx-module-brotli \
+  build-essential libssl-dev \
+  mailutils whois unattended-upgrades \
+  nodejs 
 
 # ------------------------------------------------------------
 log "Setting up unattended upgrades"
@@ -237,11 +242,11 @@ log "Adding certbot LetsEncrypt certificate"
 certbot --nginx --noninteractive -d $DOMAINALIASES_COMMA_SEPARATED --redirect --agree-tos -m $EMAILADDRESS
 
 # # Renew certbot certificates automatically
-# log "Adding auto-renew for certbot"
-# systemctl status certbot.timer
+log "Adding auto-renew for certbot"
+systemctl status certbot.timer
 
 # log "Restarting nginx"
-# systemctl restart nginx
+systemctl restart nginx
 
 
 
