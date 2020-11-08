@@ -110,7 +110,8 @@ apt-get -qqy install \
   brotli nginx-module-brotli \
   build-essential libssl-dev \
   mailutils whois unattended-upgrades \
-  nodejs 
+  nodejs \
+  /
 
 # ------------------------------------------------------------
 log "Setting up unattended upgrades"
