@@ -105,13 +105,7 @@ debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Si
 
 # ------------------------------------------------------------
 log "Install all necessary packages"
-apt-get -qqy install \
-  nginx certbot python3-certbot-nginx \
-  brotli nginx-module-brotli \
-  build-essential libssl-dev \
-  mailutils whois unattended-upgrades \
-  nodejs \
-  /
+apt-get -qqy install nginx certbot python3-certbot-nginx brotli nginx-module-brotli build-essential libssl-dev mailutils whois unattended-upgrades nodejs 
 
 # ------------------------------------------------------------
 log "Setting up unattended upgrades"
