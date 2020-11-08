@@ -94,7 +94,7 @@ echo "deb-src https://deb.nodesource.com/$NODEVERSION $DISTRO main" | sudo tee -
 # ------------------------------------------------------------
 log "Updating apt..."
 apt-get -qq update
-if [ $? ] =0; then
+if [ $? = 0 ]  then
   log "apt updated!"
 fi
 
