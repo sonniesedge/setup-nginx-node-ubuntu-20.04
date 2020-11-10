@@ -192,6 +192,34 @@ server {
     location ~ /\.(?!well-known) {
         deny            all;
     }
+    
+    location = /rss/everything.xml {
+     return 301 /rss;
+    }
+
+    location = /rss/notes.xml {
+     return 301 /notes/rss;
+    }
+
+    location = /rss/bookmarks.xml {
+     return 301 /bookmarks/rss;
+    }
+
+    location = /rss/posts.xml {
+     return 301 /posts/rss;
+    }
+
+    location = /rss/likes.xml {
+     return 301 /likes/rss;
+    }
+
+    location = /rss/quotes.xml {
+     return 301 /quotes/rss;
+    }
+
+    location = /rss/reposts.xml {
+     return 301 /reposts/rss;
+    }
 
     # favicon.ico
     location = /favicon.ico {
