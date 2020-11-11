@@ -136,17 +136,33 @@ EOT
 # ----------------
 # https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 
+
+
+
+
+
 # ------------------------------------------------------------
 log "Allowing nginx through firewall"
 ufw allow 'Nginx Full'
+
+
+
+
+
 
 # ------------------------------------------------------------
 log "Creating app directories"
 mkdir -p /var/www/$DOMAINNAME/public
 mkdir -p /var/www/$DOMAINNAME/content
 mkdir -p /var/www/$DOMAINNAME/data
+mkdir -p /var/www/$DOMAINNAME/log
 chown -R $DEPLOYUSER:$DEPLOYUSER /var/www/$DOMAINNAME
 chmod -R 755 /var/www/$DOMAINNAME
+
+
+
+
+
 
 # ------------------------------------------------------------
 log "Adding nginx server block for $DOMAINNAME"
