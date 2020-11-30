@@ -4,7 +4,7 @@
 # ------------------------------------------------------------
 HOSTNAME=whalecoiner
 DOMAINNAME=whalecoiner.com
-DOMAINALIASES=(www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org timidra.in)
+DOMAINALIASES=(www.whalecoiner.com whalecoiner.net www.whalecoiner.net whalecoiner.org www.whalecoiner.org timidra.in sonniesedge.co.uk www.sonniesedge.co.uk)
 EMAILADDRESS=charlie@sonniesedge.co.uk
 LOG=/var/log/serversetup.log
 DOMAINALIASES_COMMA_SEPARATED=$(printf '%s,' "${DOMAINALIASES[@]}")
