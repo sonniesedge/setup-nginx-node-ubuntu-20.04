@@ -264,6 +264,10 @@ server {
         log_not_found   off;
         access_log      off;
     }
+    
+    location ~ ^/posts/(.*) {
+        return 301 /articles/$1 ;
+    }
 
     # gzip compression
     gzip                on;
