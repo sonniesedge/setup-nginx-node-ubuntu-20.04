@@ -225,7 +225,7 @@ server {
         deny            all;
     }
     
-    location = /rss/everything.xml {
+        location = /rss/everything.xml {
      return 301 /rss;
     }
 
@@ -238,7 +238,11 @@ server {
     }
 
     location = /rss/posts.xml {
-     return 301 /posts/rss;
+     return 301 /articles/rss;
+    }
+
+    location = /posts {
+     return 301 /articles;
     }
 
     location = /rss/likes.xml {
