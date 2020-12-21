@@ -189,6 +189,8 @@ server {
   root            /var/www/$DOMAINNAME/public;
   index           index.html index.htm index.nginx-debian.html;
   server_name     $DOMAINNAME $DOMAINALIASES_SPACE_SEPARATED;
+  
+  client_max_body_size 8M;
 
   location / {
     # Proxy all requests to the node app
