@@ -170,13 +170,34 @@ ufw allow 'Nginx Full'
 
 
 # ------------------------------------------------------------
-log "Creating app directories"
+VOLUMENAME=content_and_data
+log "Mounting droplet volumes"
+# Create a mount point for your volume:
+mkdir -p /mnt/$VOLUMENAME
+
+# Mount your volume at the newly-created mount point:
+mount -o discard,defaults,noatime /dev/disk/by-id/scsi-0DO_Volume_content-and-data /mnt/$VOLUMENAME
+
+# Change fstab so the volume will be mounted after a reboot
+echo '/dev/disk/by-id/scsi-0DO_Volume_content-and-data /mnt/$VOLUMENAME ext4 defaults,nofail,discard 0 0' | sudo tee -a /etc/fstab
+
+
+
+# ------------------------------------------------------------
+log "Creating app directories in nginx folder"
 mkdir -p /var/www/$DOMAINNAME/public
-mkdir -p /var/www/$DOMAINNAME/content
-mkdir -p /var/www/$DOMAINNAME/data
-mkdir -p /var/www/$DOMAINNAME/log
 chown -R $DEPLOYUSER:$DEPLOYUSER /var/www/$DOMAINNAME
-chmod -R 755 /var/www/$DOMAINNAME
+chmod -R 755 /var/www/$
+
+
+
+# ------------------------------------------------------------
+log "Creating app directories in mounted volume, if they don't already exist"
+mkdir -p /mnt/$VOLUMENAME/$DOMAINNAME/content
+mkdir -p /mnt/$VOLUMENAME/$DOMAINNAME/data
+mkdir -p /mnt/$VOLUMENAME/$DOMAINNAME/log
+chown -R $DEPLOYUSER:$DEPLOYUSER /mnt/$VOLUMENAME/$DOMAINNAME
+chmod -R 755 /mnt/$VOLUMENAME/$DOMAINNAME
 
 
 
