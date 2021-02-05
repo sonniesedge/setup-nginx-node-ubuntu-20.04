@@ -227,7 +227,15 @@ server {
         deny            all;
     }
     
-        location = /rss/everything.xml {
+    location = /feed.xml {
+     return 301 /rss;
+    }
+
+    location = /rss.xml {
+     return 301 /rss;
+    }
+    
+    location = /rss/everything.xml {
      return 301 /rss;
     }
 
@@ -241,10 +249,6 @@ server {
 
     location = /rss/posts.xml {
      return 301 /articles/rss;
-    }
-
-    location = /posts {
-     return 301 /articles;
     }
 
     location = /rss/likes.xml {
@@ -269,6 +273,10 @@ server {
     location = /robots.txt {
         log_not_found   off;
         access_log      off;
+    }
+    
+    location = /posts {
+     return 301 /articles;
     }
     
     location ~ ^/posts/(.*) {
